@@ -1,0 +1,27 @@
+{
+  "name": "otoha-piano",
+  "private": true,
+  "version": "0.1.0",
+  "description": "YouTube を見ながら弾く、ブラウザで開くだけのピアノ。",
+  "license": "MIT",
+  "author": "URARA-works",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uraraworks/OtohPiano.git"
+  },
+  "homepage": "https://uraraworks.github.io/OtohPiano/",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5210 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5211 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.21",
+    "vitest": "^2.1.0"
+  }
+}

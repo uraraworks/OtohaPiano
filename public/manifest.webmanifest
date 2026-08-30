@@ -1,0 +1,16 @@
+{
+  "name": "おとは - Otoha Piano",
+  "short_name": "おとは",
+  "description": "YouTube を見ながら弾く、ブラウザで開くだけのピアノ。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#1b1630",
+  "theme_color": "#1b1630",
+  "icons": [
+    { "src": "./icon/otoha-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon/otoha-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icon/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

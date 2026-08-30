@@ -1,0 +1,862 @@
+/* おとは - Otoha Piano
+   画面は上から「動画 + 操作」「ドレミ」「鍵盤」の 3 段。
+   鍵盤は常に画面の一番下に固定で置く(持ち方を変えずに弾けることを最優先)。
+   色はアイコン(ラベンダーの音符キャラ)に合わせた紫系。 */
+
+:root {
+  --bg: #1b1630;
+  --bg-2: #241d40;
+  --bg-3: #2f2652;
+  --line: #453a72;
+  --fg: #f3efff;
+  --fg-dim: #b3a8d8;
+  --accent: #ffcf5c; /* お手本の光。暗い紫の上でいちばん目を引く色 */
+  --accent-2: #7bd7ff;
+  --danger: #ff7b8a;
+  --key-white: #fdfbff;
+  --key-white-down: #ffe9a8;
+  --key-black: #2a2340;
+  --key-black-down: #6b5a2a;
+  --radius: 12px;
+  /* ふりがな(ruby)のぶんボタンが縦に伸びるので、行の高さを最初から確保しておく。 */
+  --ctl-h: 52px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  /* 指で押さえたときの青いハイライトとテキスト選択を消す(鍵盤が選択されると困る)。 */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+ruby rt {
+  font-size: 0.5em;
+  color: var(--fg-dim);
+  font-weight: 400;
+}
+
+/* ---- 入口(音声解禁) ---------------------------------------------------- */
+
+.start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: radial-gradient(circle at 50% 35%, #3a2f66, var(--bg) 70%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.start-overlay[hidden] {
+  display: none;
+}
+
+.start-icon {
+  width: min(38vh, 180px);
+  height: auto;
+}
+
+.start-title {
+  margin: 4px 0 0;
+  font-size: 2.4rem;
+  letter-spacing: 0.15em;
+}
+
+.start-tagline {
+  margin: 0;
+  color: var(--fg-dim);
+}
+
+.start-button {
+  margin-top: 18px;
+  padding: 16px 56px;
+  font-size: 1.5rem;
+  font-family: inherit;
+  color: #3a2a00;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 6px 0 #c79b2e;
+  cursor: pointer;
+}
+
+.start-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #c79b2e;
+}
+
+.start-note {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+}
+
+/* ---- ヘッダー ---------------------------------------------------------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+
+.app-tagline {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+}
+
+.app-version {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--fg-dim);
+}
+
+/* ---- 全体レイアウト ---------------------------------------------------- */
+
+.app {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app[hidden] {
+  display: none;
+}
+
+.stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+
+.video-pane {
+  flex: 1 1 60%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.video-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.video-empty {
+  position: absolute;
+  inset: auto;
+  display: none;
+}
+
+.video-pane.is-empty .video-frame {
+  display: none;
+}
+
+.video-pane.is-empty .video-empty {
+  position: static;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--fg-dim);
+  text-align: center;
+}
+
+.side-pane {
+  flex: 0 0 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ---- 操作ボタン -------------------------------------------------------- */
+
+.ctl,
+.tab,
+.btn-primary,
+.btn-rec {
+  font-family: inherit;
+  color: var(--fg);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ctl {
+  min-height: var(--ctl-h);
+  min-width: 52px;
+  padding: 4px 10px;
+  font-size: 1.05rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.ctl small {
+  font-size: 0.62rem;
+  color: var(--fg-dim);
+}
+
+.ctl:active {
+  background: #423670;
+}
+
+.ctl.is-on {
+  background: var(--accent);
+  color: #3a2a00;
+  border-color: var(--accent);
+}
+
+.ctl.is-on small {
+  color: #6b5010;
+}
+
+.ctl.big {
+  min-width: 76px;
+}
+
+.ctl-group {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.video-controls {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.video-controls[hidden] {
+  display: none;
+}
+
+.seek-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seek {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  accent-color: var(--accent);
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+.ctl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.loop-status {
+  font-size: 0.8rem;
+  color: var(--accent);
+  min-height: 1.1em;
+}
+
+.mark-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--fg);
+  font-family: inherit;
+}
+
+.mark .del {
+  color: var(--danger);
+}
+
+/* ---- サイドパネル ------------------------------------------------------ */
+
+.tabs {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.tab {
+  flex: 1 1 0;
+  min-height: 48px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: var(--bg-2);
+  font-size: 0.9rem;
+}
+
+.tab.is-on {
+  background: var(--bg-3);
+  border-bottom-color: var(--accent);
+}
+
+.panel {
+  display: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px;
+  gap: 8px;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+.panel.is-on {
+  display: flex;
+}
+
+.panel-title {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+  color: var(--fg-dim);
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.panel-title:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.add-row {
+  display: flex;
+  gap: 6px;
+}
+
+.url-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.btn-primary {
+  min-height: 44px;
+  padding: 0 16px;
+  background: var(--accent);
+  color: #3a2a00;
+  border-color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.btn-rec {
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--danger);
+  font-size: 0.95rem;
+}
+
+.btn-rec.is-recording {
+  background: var(--danger);
+  color: #3a0008;
+  border-color: var(--danger);
+  animation: rec-pulse 1s infinite;
+}
+
+@keyframes rec-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.rec-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rec-status {
+  font-size: 0.8rem;
+  color: var(--fg-dim);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--fg-dim);
+}
+
+.hint.is-error {
+  color: var(--danger);
+}
+
+.video-list,
+.take-list,
+.memo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.video-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.video-item.is-on {
+  border-color: var(--accent);
+}
+
+.video-item img {
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #000;
+  flex: 0 0 auto;
+}
+
+.video-item .title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  /* タイトルは 2 行で打ち切る(長い曲名で一覧が崩れるのを防ぐ)。 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.icon-btn {
+  flex: 0 0 auto;
+  min-width: 40px;
+  min-height: 40px;
+  font-size: 1rem;
+  color: var(--fg-dim);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.take-item,
+.memo-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.take-item.is-playing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.take-item .name,
+.memo-item .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.take-item .meta,
+.memo-item .meta {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+.empty-note {
+  font-size: 0.8rem;
+  color: var(--fg-dim);
+  padding: 8px 0;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.metro-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.metro-lamps {
+  display: flex;
+  gap: 6px;
+}
+
+.lamp {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+}
+
+.lamp.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.lamp.is-accent.is-on {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+}
+
+.bpm {
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 3.2em;
+  text-align: center;
+}
+
+.bpm-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 32px;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+}
+
+/* ---- ドレミ ------------------------------------------------------------ */
+
+.doremi {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.doremi[hidden] {
+  display: none;
+}
+
+.doremi-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+
+.doremi-track::-webkit-scrollbar {
+  display: none;
+}
+
+.doremi-item {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  color: var(--fg-dim);
+  transition: color 0.1s, background 0.1s;
+}
+
+.doremi-item.is-now {
+  background: var(--accent);
+  color: #3a2a00;
+  font-weight: 700;
+}
+
+.doremi-item.is-past {
+  color: #6f649a;
+}
+
+.doremi-print {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 12px;
+  font-family: inherit;
+  color: var(--fg);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* ---- 鍵盤 -------------------------------------------------------------- */
+
+.keys-area {
+  flex: 0 0 auto;
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
+  padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.keys-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.oct-label {
+  min-width: 3em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.keyboard {
+  position: relative;
+  /* 白鍵の幅はここ 1 か所で決め、黒鍵の位置も同じ値から計算する。 */
+  --white-w: calc(100% / var(--white-count, 14));
+  --black-w: calc(var(--white-w) * 0.62);
+  height: clamp(120px, 26vh, 220px);
+  width: 100%;
+  /* 鍵盤の上で指を滑らせてもページがスクロールしないようにする(グリッサンド用)。 */
+  touch-action: none;
+}
+
+.key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 8px 8px;
+}
+
+.key-white {
+  width: var(--white-w);
+  height: 100%;
+  background: var(--key-white);
+  border: 1px solid #b9b0d0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+
+.key-black {
+  width: var(--black-w);
+  height: 62%;
+  background: var(--key-black);
+  border: 1px solid #100c1e;
+  z-index: 2;
+}
+
+.key-label {
+  font-size: 0.8rem;
+  color: #6f649a;
+  pointer-events: none;
+}
+
+.kb-no-names .key-label {
+  display: none;
+}
+
+.key-white.key-down {
+  background: var(--key-white-down);
+}
+
+.key-black.key-down {
+  background: var(--key-black-down);
+}
+
+/* お手本の光。押下の色とは別に、外向きの光で「ここを押す」を示す。 */
+.key-guide {
+  box-shadow: 0 0 14px 3px var(--accent), 0 0 0 2px var(--accent) inset;
+}
+
+.key-white.key-guide {
+  background: #fff4d0;
+}
+
+.key-black.key-guide {
+  background: #7a6528;
+}
+
+/* ---- お知らせ ---------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  z-index: 90;
+  padding: 12px 20px;
+  background: #100c1e;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+/* ---- 縦向き・狭い画面 --------------------------------------------------- */
+
+@media (max-width: 860px), (orientation: portrait) {
+  .stage {
+    flex-direction: column;
+  }
+
+  .side-pane {
+    flex: 1 1 auto;
+    /* 縦画面では動画と一覧を上下に積む。鍵盤の高さは削らない。 */
+    min-height: 180px;
+  }
+
+  .video-pane {
+    flex: 0 0 auto;
+  }
+
+  .video-frame {
+    aspect-ratio: 16 / 9;
+    flex: 0 0 auto;
+  }
+}
+
+/* ---- 印刷(ドレミの持ち出し) --------------------------------------------- */
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .app-header,
+  .stage,
+  .keys-area,
+  .doremi-print,
+  .start-overlay {
+    display: none !important;
+  }
+
+  .doremi {
+    display: block;
+    border: none;
+    background: #fff;
+  }
+
+  .doremi-track {
+    display: block;
+    overflow: visible;
+    font-size: 1.4rem;
+    line-height: 2.2;
+  }
+
+  .doremi-item {
+    display: inline-block;
+    color: #000;
+    background: none !important;
+  }
+}

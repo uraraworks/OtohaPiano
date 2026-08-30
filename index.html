@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 子どもがダブルタップ・ピンチで画面を吹き飛ばさないよう拡大を止める。
+         鍵盤は画面いっぱいに固定で置くので、そもそも拡大する必要がない。 -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1b1630" />
+    <meta name="description" content="YouTube を見ながら弾く、ブラウザで開くだけのピアノ。" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icon/otoha-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./icon/otoha-16.png" />
+    <!-- iOS のホーム画面は透過を黒く落とすので、apple-touch-icon だけ背景入りを使う。 -->
+    <link rel="apple-touch-icon" href="./icon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>おとは - Otoha Piano</title>
+  </head>
+  <body>
+    <!-- 音声はユーザー操作の中でしか解禁できない(ブラウザの自動再生制限)。
+         最初の 1 タップを必ず通す入口をここに置く。 -->
+    <div id="start-overlay" class="start-overlay">
+      <img src="./icon/otoha-512.png" alt="" class="start-icon" width="180" height="180" />
+      <h1 class="start-title">おとは</h1>
+      <p class="start-tagline">うごく がめんを 見ながら ひくピアノ</p>
+      <button id="start-button" class="start-button" type="button">はじめる</button>
+      <p class="start-note">音が出ます。音量をたしかめてね。</p>
+    </div>
+
+    <header class="app-header">
+      <img class="app-icon" src="./icon/otoha-64.png" alt="" width="28" height="28" />
+      <h1>おとは</h1>
+      <p class="app-tagline">見ながら ひく ピアノ</p>
+      <span class="app-version" id="app-version"></span>
+    </header>
+
+    <main class="app" id="app" hidden>
+      <section class="stage">
+        <div class="video-pane is-empty">
+          <!-- 映像は必ず出す(音だけの再生は利用規約で不可。原体験も「見ながら弾く」)。 -->
+          <div class="video-frame"><div id="player-mount"></div></div>
+          <div class="video-empty" id="video-empty">
+            <!-- 縦向きでは一覧が下に回るので、「右の」のような方向を指す言い方はしない。 -->
+            <p>
+              <ruby>一覧<rt>いちらん</rt></ruby> から
+              <ruby>曲<rt>きょく</rt></ruby> を えらんでね
+            </p>
+          </div>
+
+          <div class="video-controls" id="video-controls" hidden>
+            <div class="seek-row">
+              <button class="ctl" id="btn-play" type="button" aria-label="再生／一時停止">▶</button>
+              <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="再生位置" />
+              <span class="time" id="time-label">0:00 / 0:00</span>
+            </div>
+
+            <div class="ctl-row">
+              <span class="ctl-group" role="group" aria-label="再生速度">
+                <button class="ctl rate" data-rate="0.5" type="button">🐢<small>0.5</small></button>
+                <button class="ctl rate" data-rate="0.75" type="button">🚶<small>0.75</small></button>
+                <button class="ctl rate is-on" data-rate="1" type="button">🏃<small>1.0</small></button>
+              </span>
+
+              <span class="ctl-group" role="group" aria-label="くりかえし">
+                <button class="ctl" id="btn-a" type="button">A<small>ここから</small></button>
+                <button class="ctl" id="btn-b" type="button">B<small>ここまで</small></button>
+                <button class="ctl" id="btn-loop" type="button">🔁<small>くりかえし</small></button>
+                <button class="ctl" id="btn-loop-clear" type="button">✕<small>とりけし</small></button>
+              </span>
+
+              <span class="ctl-group">
+                <button class="ctl" id="btn-mark" type="button">📍<small>ここを おぼえる</small></button>
+              </span>
+            </div>
+
+            <div class="loop-status" id="loop-status"></div>
+            <div class="mark-list" id="mark-list"></div>
+          </div>
+        </div>
+
+        <aside class="side-pane">
+          <nav class="tabs" role="tablist">
+            <button class="tab is-on" data-tab="library" type="button" role="tab">
+              🎬 <ruby>曲<rt>きょく</rt></ruby>
+            </button>
+            <button class="tab" data-tab="takes" type="button" role="tab">✨ おてほん</button>
+            <button class="tab" data-tab="tools" type="button" role="tab">
+              🥁 <ruby>道具<rt>どうぐ</rt></ruby>
+            </button>
+          </nav>
+
+          <!-- 曲(ライブラリ) -->
+          <section class="panel is-on" data-panel="library" role="tabpanel">
+            <div class="add-row">
+              <input
+                id="url-input"
+                class="url-input"
+                type="text"
+                inputmode="url"
+                placeholder="YouTube の URL をはりつけ"
+                aria-label="YouTube の URL"
+              />
+              <button class="btn-primary" id="btn-add" type="button">
+                <ruby>追加<rt>ついか</rt></ruby>
+              </button>
+            </div>
+            <p class="hint" id="add-hint">
+              YouTube アプリの「<ruby>共有<rt>きょうゆう</rt></ruby>」からコピーした URL を
+              そのままはりつけられます。
+            </p>
+            <ul class="video-list" id="video-list"></ul>
+          </section>
+
+          <!-- おてほん(打鍵記録) -->
+          <section class="panel" data-panel="takes" role="tabpanel">
+            <div class="rec-row">
+              <button class="btn-rec" id="btn-rec-keys" type="button">
+                ● <ruby>打鍵<rt>だけん</rt></ruby>を ろくおん
+              </button>
+              <span class="rec-status" id="rec-status"></span>
+            </div>
+            <p class="hint">
+              じょうずな人が この
+              <ruby>鍵盤<rt>けんばん</rt></ruby> で ひくと、
+              <ruby>光<rt>ひか</rt></ruby>る けんばん の おてほん になります。
+              <ruby>動画<rt>どうが</rt></ruby>を さいせいしながら ろくおん すると、
+              シーク・くりかえし・そくどに ついてきます。
+            </p>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" id="chk-take-sound" checked /> <span>🔊 音を出す</span></label>
+              <label class="toggle"><input type="checkbox" id="chk-take-light" checked /> <span>💡 けんばんを 光らせる</span></label>
+              <label class="toggle"><input type="checkbox" id="chk-doremi" checked /> <span>🎵 ドレミを 出す</span></label>
+            </div>
+            <ul class="take-list" id="take-list"></ul>
+
+            <h2 class="panel-title">
+              🎤 <ruby>音声<rt>おんせい</rt></ruby>の ろくおんメモ
+            </h2>
+            <div class="rec-row" id="memo-row">
+              <button class="btn-rec" id="btn-rec-audio" type="button">● マイクで ろくおん</button>
+              <span class="rec-status" id="memo-status"></span>
+            </div>
+            <p class="hint" id="memo-hint">
+              ほんものの ピアノ・せんせい・ともだち の
+              <ruby>演奏<rt>えんそう</rt></ruby> を のこせます。
+              <ruby>端末<rt>たんまつ</rt></ruby>の 中だけに ほぞんされます。
+            </p>
+            <ul class="memo-list" id="memo-list"></ul>
+          </section>
+
+          <!-- 道具(メトロノーム) -->
+          <section class="panel" data-panel="tools" role="tabpanel">
+            <h2 class="panel-title">🥁 メトロノーム</h2>
+            <div class="metro-row">
+              <button class="ctl big" id="btn-metro" type="button">▶<small>スタート</small></button>
+              <div class="metro-lamps" id="metro-lamps"></div>
+            </div>
+            <div class="metro-row">
+              <button class="ctl" id="btn-bpm-down" type="button">−</button>
+              <span class="bpm" id="bpm-label">100</span>
+              <button class="ctl" id="btn-bpm-up" type="button">＋</button>
+              <button class="ctl" id="btn-tap" type="button">
+                👆<small>タップ</small>
+              </button>
+            </div>
+            <input class="bpm-slider" id="bpm-slider" type="range" min="30" max="240" value="100" aria-label="BPM" />
+            <div class="metro-row">
+              <span class="label"><ruby>拍子<rt>ひょうし</rt></ruby></span>
+              <button class="ctl beats is-on" data-beats="4" type="button">4</button>
+              <button class="ctl beats" data-beats="3" type="button">3</button>
+              <button class="ctl beats" data-beats="2" type="button">2</button>
+            </div>
+
+            <h2 class="panel-title">🔈 <ruby>音量<rt>おんりょう</rt></ruby></h2>
+            <input class="bpm-slider" id="volume" type="range" min="0" max="100" value="70" aria-label="音量" />
+
+            <h2 class="panel-title">
+              🎹 <ruby>鍵盤<rt>けんばん</rt></ruby>
+            </h2>
+            <div class="metro-row">
+              <span class="label"><ruby>広<rt>ひろ</rt></ruby>さ</span>
+              <button class="ctl width-btn" data-white="10" type="button">せまい</button>
+              <button class="ctl width-btn is-on" data-white="14" type="button">ふつう</button>
+              <button class="ctl width-btn" data-white="21" type="button">ひろい</button>
+            </div>
+            <label class="toggle"
+              ><input type="checkbox" id="chk-key-names" checked /> <span>けんばんに ドレミを 書く</span></label
+            >
+          </section>
+        </aside>
+      </section>
+
+      <!-- 流れるドレミ。お手本を再生している間だけ出す。 -->
+      <div class="doremi" id="doremi" hidden>
+        <div class="doremi-track" id="doremi-track"></div>
+        <button class="doremi-print" id="btn-print" type="button">🖨 <ruby>印刷<rt>いんさつ</rt></ruby></button>
+      </div>
+
+      <div class="keys-area">
+        <div class="keys-toolbar">
+          <span class="ctl-group" id="instrument-group" role="group" aria-label="楽器"></span>
+          <span class="ctl-group">
+            <button class="ctl" id="btn-oct-down" type="button">◀<small>ひくく</small></button>
+            <span class="oct-label" id="oct-label">C4</span>
+            <button class="ctl" id="btn-oct-up" type="button">▶<small>たかく</small></button>
+          </span>
+        </div>
+        <div class="keyboard" id="keyboard"></div>
+      </div>
+    </main>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
