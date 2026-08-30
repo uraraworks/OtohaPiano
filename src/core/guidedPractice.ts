@@ -76,6 +76,24 @@ export class GuidedPractice {
     return { kind: "advance", next: this.current };
   }
 
+  /**
+   * 手を継ぎ足す。終わりのない練習(タイピングソフトのように出題が尽きない形)で使う。
+   * 押し終わってから足したのでは一瞬「終わった」状態を通ってしまうので、
+   * 呼ぶ側は残りが少なくなった時点で足す。
+   */
+  append(steps: number[][]): void {
+    const add = steps.filter((s) => s.length > 0);
+    if (add.length === 0) return;
+    this.steps.push(...add);
+    // 既に終わっていたなら、足したぶんから再開する。
+    this.finished = false;
+  }
+
+  /** あと何手ぶん残っているか。継ぎ足す判断に使う。 */
+  get remainingSteps(): number {
+    return Math.max(0, this.steps.length - this.index);
+  }
+
   reset(): void {
     this.index = 0;
     this.hit.clear();

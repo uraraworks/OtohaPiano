@@ -90,7 +90,7 @@
               🎬 <ruby>曲<rt>きょく</rt></ruby>
             </button>
             <button class="tab" data-tab="takes" type="button" role="tab">✨ おてほん</button>
-            <button class="tab" data-tab="practice" type="button" role="tab">🎯 れんしゅう</button>
+            <button class="tab" data-tab="practice" type="button" role="tab">🎯 おとあて</button>
             <button class="tab" data-tab="tools" type="button" role="tab">
               🥁 <ruby>道具<rt>どうぐ</rt></ruby>
             </button>
@@ -155,37 +155,46 @@
             <ul class="memo-list" id="memo-list"></ul>
           </section>
 
-          <!-- れんしゅう(入門の練習課題) -->
+          <!-- おとあて(音と音名の対応を覚えるドリル) -->
           <section class="panel" data-panel="practice" role="tabpanel">
             <p class="hint">
-              <ruby>曲<rt>きょく</rt></ruby>ではなく、<ruby>指<rt>ゆび</rt></ruby>の
-              <ruby>動<rt>うご</rt></ruby>かしかたの れんしゅうです。
-              <ruby>光<rt>ひか</rt></ruby>った けんばんを おすと つぎへ すすみます。
-              まちがえても すすまないだけなので、あわてなくて だいじょうぶ。
+              <ruby>出<rt>で</rt></ruby>た おだいの けんばんを おします。やめるまで つづきます。
+              <ruby>弾<rt>ひ</rt></ruby>きかた（<ruby>指<rt>ゆび</rt></ruby>づかい・手の かたち）は
+              あつかいません。<strong>「この音は ド」「ド は この けん」</strong>が
+              わかるように なるための れんしゅうです。
             </p>
+
+            <!-- おだいの出しかた。文字→鍵 と 音→鍵 のどちらも「音と音名の対応」を作る。
+                 光は位置を教えるだけで音名を覚えないので、いちばん やさしい段としてだけ置く。 -->
+            <div class="metro-row" role="group" aria-label="おだいの出しかた">
+              <span class="label">おだい</span>
+              <button class="ctl mode-btn" data-mode="light" type="button">💡<small>ひかる</small></button>
+              <button class="ctl mode-btn is-on" data-mode="letter" type="button">🔤<small>もじ</small></button>
+              <button class="ctl mode-btn" data-mode="sound" type="button">👂<small>おと</small></button>
+            </div>
+            <p class="hint" id="mode-hint"></p>
 
             <div class="practice-now" id="practice-now" hidden>
               <div class="practice-head">
                 <span class="practice-name" id="practice-name"></span>
                 <button class="icon-btn" id="btn-practice-quit" type="button" aria-label="やめる">✕</button>
               </div>
-              <div class="practice-bar"><span class="practice-fill" id="practice-fill"></span></div>
-              <div class="practice-meta">
-                <span id="practice-step">1 / 1</span>
-                <button class="ctl" id="btn-practice-listen" type="button">👂<small>きく</small></button>
-                <button class="ctl" id="btn-practice-again" type="button">↺<small>やりなおす</small></button>
+
+              <div class="prompt-strip" id="prompt-strip" hidden></div>
+              <div class="prompt-sound" id="prompt-sound" hidden>
+                <button class="ctl big" id="btn-replay" type="button">🔊<small>もういちど</small></button>
+                <span class="prompt-sound-note">どの音か あてて、けんばんを おしてね</span>
               </div>
-              <p class="practice-aim" id="practice-aim"></p>
+
+              <div class="practice-stats" id="practice-stats"></div>
+              <div class="practice-meta">
+                <span id="practice-best"></span>
+                <button class="ctl" id="btn-practice-hint" type="button">💡<small>ヒント</small></button>
+              </div>
             </div>
 
-            <h2 class="panel-title">じゅんばんに</h2>
-            <ul class="exercise-list" id="exercise-list"></ul>
-
-            <h2 class="panel-title">ランダム（<ruby>音<rt>おと</rt></ruby>あてゲーム）</h2>
-            <p class="hint">
-              まいかい ちがう おだいが 出ます。ならびを おぼえてしまわないための れんしゅうです。
-            </p>
-            <ul class="exercise-list" id="random-list"></ul>
+            <h2 class="panel-title">どこまでの <ruby>音<rt>おと</rt></ruby> を 出すか</h2>
+            <ul class="exercise-list" id="drill-list"></ul>
           </section>
 
           <!-- 道具(メトロノーム) -->

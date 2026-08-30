@@ -509,6 +509,77 @@ ruby rt {
   }
 }
 
+/* おだいの並び。タイピングソフトのように、今の文字を強調して先を見せる。 */
+.prompt-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 0;
+}
+
+.prompt-strip[hidden] {
+  display: none;
+}
+
+.prompt-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.prompt-item {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  color: var(--fg-dim);
+}
+
+.prompt-item.is-now {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  /* 今のおだいだけ少し大きく。目で追う先を 1 か所に絞る。 */
+  font-size: 1.35rem;
+}
+
+.prompt-item.is-past {
+  color: var(--fg-faint);
+}
+
+.prompt-sound {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prompt-sound[hidden] {
+  display: none;
+}
+
+.prompt-sound-note {
+  font-size: 0.78rem;
+  color: var(--fg-dim);
+}
+
+.practice-bar[hidden] {
+  display: none;
+}
+
+.practice-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-stats[hidden] {
+  display: none;
+}
+
+.practice-stats b {
+  font-size: 1.1rem;
+}
+
 .exercise-list {
   list-style: none;
   margin: 0;

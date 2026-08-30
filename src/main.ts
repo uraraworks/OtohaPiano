@@ -4,7 +4,7 @@
 import "./style.css";
 import { Synth, INSTRUMENTS } from "./core/synth.ts";
 import { Keyboard } from "./ui/keyboard.ts";
-import { MIDI_MIDDLE_C, noteNameEn, octaveStartCandidates } from "./core/notes.ts";
+import { MIDI_MIDDLE_C, noteNameEn, noteNameJa, octaveStartCandidates } from "./core/notes.ts";
 import { VideoPlayer } from "./core/youtubePlayer.ts";
 import { parseVideoId, parseStartSeconds, thumbnailUrl, formatTime } from "./core/youtubeUrl.ts";
 import {
@@ -35,14 +35,7 @@ import {
 } from "./core/audioMemo.ts";
 import { newId, loadJson, saveJson } from "./core/storage.ts";
 import { isFullscreenSupported, isFullscreenActive, toggleFullscreen, onFullscreenChange } from "./core/fullscreen.ts";
-import {
-  EXERCISES,
-  RANDOM_LEVELS,
-  toNoteEvents,
-  toKeySteps,
-  makeRandomExercise,
-  type Exercise,
-} from "./core/exercises.ts";
+import { DRILL_LEVELS, makeDrillSteps, type DrillLevel } from "./core/drills.ts";
 import { GuidedPractice } from "./core/guidedPractice.ts";
 
 /** 型付きで要素を引く。無ければ組み立てのミスなので即座に落とす。 */
@@ -90,11 +83,16 @@ let playingTakeId: string | null = null;
 let taps: number[] = [];
 /** 再生中の音声メモ。切り替えのときに前のものを止める。 */
 let memoAudio: HTMLAudioElement | null = null;
-/** 待ちながら進む練習。null なら練習していない。 */
+/** 出題中のドリル。null なら やっていない。 */
 let practice: GuidedPractice | null = null;
-let practiceExercise: Exercise | null = null;
-/** 押し切った課題の id。次に開いたときも「できた」印を残す。 */
-let clearedExercises = new Set<string>(loadJson<string[]>("cleared", []));
+let drillLevel: DrillLevel | null = null;
+/** 出題の音名。もじのおだいで並べて見せる。 */
+let drillLabels: string[] = [];
+/** おだいの出しかた。前回選んだものを覚えておく。 */
+let promptMode: PromptMode = loadJson<PromptMode>("promptMode", "letter");
+let stats = { hits: 0, misses: 0, startedAt: 0 };
+/** レベルごとの最高記録(音/分)。次に開いたときの目標になる。 */
+const bestScores = loadJson<Record<string, number>>("best", {});
 
 const keyboard = new Keyboard($("keyboard"), {
   startMidi,
@@ -169,7 +167,8 @@ $("start-button").addEventListener("click", () => {
     renderMemos();
     renderInstruments();
     renderMetroLamps();
-    renderExercises();
+    renderDrills();
+    setPromptMode(promptMode);
     updateOctaveLabel();
   })();
 });
@@ -840,157 +839,242 @@ window.addEventListener("pagehide", () => {
   metronome.stop();
 });
 
-// ---- れんしゅう（入門の練習課題） --------------------------------------------
+// ---- おとあて（音と音名の対応を覚えるドリル） ---------------------------------
+//
+// 何をしないかを先に決めてある。弾き方（運指・手の形・姿勢）には触れない。
+// 作っているのは資格を持つ人ではないので、そこに踏み込むと妙なクセを付けかねない。
+// 一方「この音は ド」「ド はこの鍵」という対応は、誰から習っても同じ事実で、
+// 間違った癖の付きようがない。ここで扱うのはそれだけ。
+//
+// おだいの出しかたは 3 段階。
+//   ひかる … 押す鍵が光る。位置を教えるだけで音名は覚えないので、いちばん下の段
+//   もじ   … 「ド」と文字で出る。音名 → 鍵 の対応を作る
+//   おと   … 音だけ鳴る。音 → 鍵 の対応を作る。ここが目的地
+// 課題そのものは同じで、変わるのは「おだいの見せかた」だけ。
+
+type PromptMode = "light" | "letter" | "sound";
+
+const MODE_HINTS: Record<PromptMode, string> = {
+  light: "けんばんが 光ります。まず ばしょに なれるための だんかいです。",
+  letter: "「ド」のように もじで 出ます。もじと けんばんが むすびつきます。",
+  sound: "音だけ 鳴ります。聞いた音が どれか わかるように なります。",
+};
+
+/** 一度に作る出題の数。少なすぎると継ぎ目で表示が飛び、多すぎると文字列が長くなる。 */
+const DRILL_CHUNK = 12;
 
 /**
- * 課題の音は鍵盤の左端を「ド」として組み立てる。
- * オクターブを動かしても課題が画面の外へ出ないようにするため、
- * 絶対音高ではなく今の鍵盤の位置から決める。
+ * 出題は鍵盤の左端を「ド」として作る。
+ * オクターブを動かしても、答えの鍵が画面の外へ出ないようにするため。
  */
-function practiceBase(): number {
+function drillBase(): number {
   return keyboard.getStartMidi();
 }
 
-function renderExercises(): void {
-  const list = $("exercise-list");
+function setPromptMode(mode: PromptMode): void {
+  promptMode = mode;
+  saveJson("promptMode", mode);
+  for (const b of document.querySelectorAll<HTMLElement>(".mode-btn")) {
+    b.classList.toggle("is-on", b.dataset.mode === mode);
+  }
+  $("mode-hint").textContent = MODE_HINTS[mode];
+  if (practice) presentStep(true);
+}
+
+for (const btn of document.querySelectorAll<HTMLElement>(".mode-btn")) {
+  btn.addEventListener("click", () => setPromptMode(btn.dataset.mode as PromptMode));
+}
+
+function renderDrills(): void {
+  const list = $("drill-list");
   list.innerHTML = "";
-  for (const ex of EXERCISES) {
-    list.appendChild(
-      exerciseButton(ex.name, ex.aim, clearedExercises.has(ex.id), ex.id === practiceExercise?.id, () =>
-        startPractice(ex),
-      ),
-    );
-  }
+  for (const level of DRILL_LEVELS) {
+    const best = bestScores[level.id];
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "exercise-item" + (drillLevel?.id === level.id ? " is-on" : "");
 
-  const rlist = $("random-list");
-  rlist.innerHTML = "";
-  for (const level of RANDOM_LEVELS) {
-    rlist.appendChild(
-      exerciseButton(level.name, level.aim, false, false, () => {
-        // 出題は毎回作り直す。並びを覚えてしまわないための課題なので、使い回さない。
-        startPractice(makeRandomExercise(level, 12, Math.random));
-      }),
-    );
+    const label = document.createElement("span");
+    label.className = "ex-name";
+    label.textContent = level.name;
+    const sub = document.createElement("small");
+    sub.className = "ex-aim";
+    sub.textContent = level.aim;
+    label.appendChild(sub);
+
+    const mark = document.createElement("span");
+    mark.className = "ex-clear";
+    // 記録は「できた／できない」ではなく数字で出す。終わりが無い練習なので、
+    // 印を付けると「もう終わったもの」に見えてしまう。
+    mark.textContent = best ? `${best} 音/分` : "";
+
+    btn.append(label, mark);
+    btn.addEventListener("click", () => startDrill(level));
+    li.appendChild(btn);
+    list.appendChild(li);
   }
 }
 
-function exerciseButton(
-  name: string,
-  aim: string,
-  cleared: boolean,
-  active: boolean,
-  onClick: () => void,
-): HTMLElement {
-  const li = document.createElement("li");
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "exercise-item" + (active ? " is-on" : "");
-
-  const label = document.createElement("span");
-  label.className = "ex-name";
-  label.textContent = name;
-  const sub = document.createElement("small");
-  sub.className = "ex-aim";
-  sub.textContent = aim;
-  label.appendChild(sub);
-
-  const mark = document.createElement("span");
-  mark.className = "ex-clear";
-  mark.textContent = cleared ? "⭐" : "";
-
-  btn.append(label, mark);
-  btn.addEventListener("click", onClick);
-  li.appendChild(btn);
-  return li;
-}
-
-function startPractice(ex: Exercise): void {
-  // 動画のお手本と練習が同時に鍵盤を光らせると、どちらの光か分からなくなる。
+function startDrill(level: DrillLevel): void {
+  // 動画のお手本とドリルが同時に鍵盤を光らせると、どちらの光か分からなくなる。
   stopTakePlayback();
-  practiceExercise = ex;
-  practice = new GuidedPractice(toKeySteps(ex, practiceBase()));
+  drillLevel = level;
+  const steps = makeDrillSteps(level, DRILL_CHUNK, drillBase(), Math.random);
+  drillLabels = steps.map(labelOf);
+  practice = new GuidedPractice(steps);
+  stats = { hits: 0, misses: 0, startedAt: performance.now() };
+
   $("practice-now").hidden = false;
-  $("practice-now").classList.remove("is-done");
-  $("practice-name").textContent = ex.name;
-  $("practice-aim").textContent = ex.aim;
-  showPracticeGuide();
-  updatePracticeProgress();
-  renderExercises();
+  $("practice-name").textContent = level.name;
+  presentStep(true);
+  renderDrills();
 }
 
-function stopPractice(): void {
+/** 1 手ぶんの音名。和音は「ドミ」のようにつなげる（流れるドレミと同じ書き方）。 */
+function labelOf(step: number[]): string {
+  return [...step].sort((a, b) => a - b).map(noteNameJa).join("");
+}
+
+function stopDrill(): void {
+  if (stats.hits > 0) reportResult();
   practice = null;
-  practiceExercise = null;
+  drillLevel = null;
+  drillLabels = [];
   keyboard.clearGuide();
   $("practice-now").hidden = true;
-  renderExercises();
+  renderDrills();
 }
 
-/** 今 押すべき鍵だけを光らせる。押せた音は消して、残りが分かるようにする。 */
-function showPracticeGuide(): void {
+/**
+ * 今の手を提示する。
+ * @param playSound 音のおだいを鳴らすか。表示だけ作り直すときは false。
+ */
+function presentStep(playSound: boolean): void {
+  const p = practice;
+  if (!p) return;
   keyboard.clearGuide();
-  if (!practice) return;
-  for (const midi of practice.remaining) keyboard.setGuide(midi, true);
+  $("prompt-strip").hidden = promptMode !== "letter";
+  $("prompt-sound").hidden = promptMode !== "sound";
+
+  if (promptMode === "light") {
+    for (const midi of p.remaining) keyboard.setGuide(midi, true);
+  } else if (promptMode === "letter") {
+    renderPromptStrip();
+  } else if (playSound) {
+    playCurrentPrompt();
+  }
+  updateStats();
 }
 
-function updatePracticeProgress(): void {
-  if (!practice) return;
-  const { step, total } = practice.progress;
-  $("practice-step").textContent = `${step} / ${total}`;
-  const done = practice.done ? total : step - 1;
-  $<HTMLElement>("practice-fill").style.width = `${total === 0 ? 0 : (done / total) * 100}%`;
+/** タイピングソフトのように、今のおだいを強調して先も見せる。 */
+function renderPromptStrip(): void {
+  const p = practice;
+  if (!p) return;
+  const now = p.progress.step - 1;
+  const strip = $("prompt-strip");
+  strip.innerHTML = "";
+  // 終わったぶんを全部残すと横に伸び続けるので、直前 2 つと先 8 つだけ出す。
+  const from = Math.max(0, now - 2);
+  const to = Math.min(drillLabels.length, now + 9);
+  for (let i = from; i < to; i++) {
+    const el = document.createElement("span");
+    el.className = "prompt-item" + (i === now ? " is-now" : i < now ? " is-past" : "");
+    el.textContent = drillLabels[i] ?? "";
+    strip.appendChild(el);
+  }
+}
+
+/** 音のおだいを鳴らす。鍵盤を経由しないので、答えの判定には入らない。 */
+function playCurrentPrompt(): void {
+  const p = practice;
+  if (!p) return;
+  const notes = p.current;
+  for (const midi of notes) synth.noteOn(midi, 0.9);
+  window.setTimeout(() => {
+    for (const midi of notes) synth.noteOff(midi);
+  }, 750);
+}
+
+$("btn-replay").addEventListener("click", () => playCurrentPrompt());
+
+// ヒント。分からなくなったとき、今の答えだけ光らせる。
+// これが無いと「音のおだい」は詰まったときに行き止まりになる。
+$("btn-practice-hint").addEventListener("click", () => {
+  const p = practice;
+  if (!p) return;
+  for (const midi of p.remaining) keyboard.setGuide(midi, true);
+  if (promptMode !== "light") {
+    window.setTimeout(() => {
+      if (practice === p && promptMode !== "light") keyboard.clearGuide();
+    }, 1500);
+  }
+});
+
+function perMinute(): number {
+  const minutes = (performance.now() - stats.startedAt) / 60000;
+  // 始めた直後は 1 音でも極端な数字になるので、少し経つまで出さない。
+  return minutes > 0.08 ? Math.round(stats.hits / minutes) : 0;
+}
+
+function updateStats(): void {
+  if (!drillLevel) return;
+  $("practice-stats").innerHTML =
+    `<span>できた <b>${stats.hits}</b></span>` +
+    `<span>まちがえ <b>${stats.misses}</b></span>` +
+    `<span><b>${perMinute()}</b> 音/分</span>`;
+  const best = bestScores[drillLevel.id];
+  $("practice-best").textContent = best ? `さいこう ${best} 音/分` : "";
 }
 
 function onPracticePress(midi: number): void {
-  // 終わったあとの打鍵は、ただ音が鳴るだけにする。
-  // 塞がないと、押すたびに「できました！」が出てしまう。
-  if (!practice || practice.done) return;
-  const result = practice.press(midi);
+  const p = practice;
+  if (!p) return;
+  const result = p.press(midi);
+
   if (result.kind === "wrong") {
+    stats.misses++;
     // 責めない。進まないことが、そのまま「ちがう」の合図になる。
+    // 音のおだいだけは鳴らしなおす（聞き逃した可能性の方が高いため）。
+    if (promptMode === "sound") playCurrentPrompt();
+    updateStats();
     return;
   }
-  showPracticeGuide();
-  updatePracticeProgress();
-  if (result.kind === "done") finishPractice();
-}
 
-function finishPractice(): void {
-  const ex = practiceExercise;
-  keyboard.clearGuide();
-  $("practice-now").classList.add("is-done");
-  if (ex && !ex.id.startsWith("random-")) {
-    clearedExercises.add(ex.id);
-    saveJson("cleared", [...clearedExercises]);
+  if (result.kind === "partial") {
+    // 和音の途中。光らせている場合は、押せた音だけ消す。
+    if (promptMode === "light") {
+      keyboard.clearGuide();
+      for (const m of p.remaining) keyboard.setGuide(m, true);
+    }
+    return;
   }
-  toast("できました！");
-  renderExercises();
+
+  stats.hits++;
+  // 残りが減ったところで継ぎ足す。押し切ってから足すと、
+  // 一瞬「終わった」状態を通ってしまう。
+  if (drillLevel && p.remainingSteps <= 4) {
+    const more = makeDrillSteps(drillLevel, DRILL_CHUNK, drillBase(), Math.random);
+    p.append(more);
+    drillLabels = [...drillLabels, ...more.map(labelOf)];
+  }
+  presentStep(true);
 }
 
-$("btn-practice-quit").addEventListener("click", () => stopPractice());
+function reportResult(): void {
+  const level = drillLevel;
+  if (!level) return;
+  const score = perMinute();
+  const prev = bestScores[level.id] ?? 0;
+  // 最高記録は、ある程度の数をこなしたときだけ更新する
+  // (数音でやめた記録が残ると、次に届かない目標になってしまう)。
+  if (stats.hits >= 20 && score > prev) {
+    bestScores[level.id] = score;
+    saveJson("best", bestScores);
+    toast(`さいこう記録！ ${score} 音/分`);
+    return;
+  }
+  toast(`できた ${stats.hits} 音 ／ まちがえ ${stats.misses}`);
+}
 
-$("btn-practice-again").addEventListener("click", () => {
-  if (!practiceExercise) return;
-  startPractice(practiceExercise);
-});
-
-// お手本を聞く。課題を打鍵記録と同じ形へ展開して、既存の再生に渡すだけでよい。
-$("btn-practice-listen").addEventListener("click", () => {
-  const ex = practiceExercise;
-  if (!ex) return;
-  keyboard.clearGuide();
-  const events = toNoteEvents(ex, practiceBase(), metronome.getBpm());
-  // 最後の音が鳴り終わるまでを長さにする(at だけだと最後の音が切れる)。
-  const last = events[events.length - 1];
-  const duration = last ? last.at + last.dur : 0;
-  const take = makeTake(ex.name, null, synth.getInstrument().id, events, duration);
-  takePlayback.setSounding(true);
-  takePlayback.setLighting(true);
-  takePlayback.startStandalone(take, 1);
-  // 聞き終わったら、押すべき鍵の表示へ戻す。
-  const back = window.setInterval(() => {
-    if (takePlayback.playing) return;
-    window.clearInterval(back);
-    showPracticeGuide();
-  }, 200);
-});
+$("btn-practice-quit").addEventListener("click", () => stopDrill());

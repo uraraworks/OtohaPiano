@@ -70,4 +70,28 @@ describe("GuidedPractice", () => {
     g.press(60);
     expect(g.current).toEqual([62]);
   });
+
+  it("手を継ぎ足せる（出題が尽きない練習のため）", () => {
+    const g = new GuidedPractice([[60]]);
+    expect(g.remainingSteps).toBe(1);
+    g.append([[62], [64]]);
+    expect(g.remainingSteps).toBe(3);
+    g.press(60);
+    expect(g.current).toEqual([62]);
+    expect(g.done).toBe(false);
+  });
+
+  it("押し切ったあとに足すと、そこから再開する", () => {
+    const g = new GuidedPractice([[60]]);
+    expect(g.press(60)).toEqual({ kind: "done" });
+    g.append([[62]]);
+    expect(g.done).toBe(false);
+    expect(g.current).toEqual([62]);
+  });
+
+  it("空の手を足しても増えない", () => {
+    const g = new GuidedPractice([[60]]);
+    g.append([[]]);
+    expect(g.remainingSteps).toBe(1);
+  });
 });
