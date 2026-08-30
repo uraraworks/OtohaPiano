@@ -561,15 +561,19 @@ ruby rt {
 /* ---- おとあて ---------------------------------------------------------- */
 
 .practice-panel {
-  /* 設定は上、おだいは下。おだいは縦の空きを全部使う。 */
   gap: 10px;
+  /* 選ぶだけの画面なので、選択肢を縦の真ん中へ寄せる。
+     safe を付けると、画面が足りないときに上が切れて選べなくなるのを防げる
+     (対応していないブラウザは 1 行目の center が効く)。 */
+  justify-content: center;
+  justify-content: safe center;
 }
 
 .practice-settings {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   /* 設定はすべて中央に寄せる。おだいが中央に出るので、視線の軸を 1 本にする。 */
   align-items: center;
   text-align: center;

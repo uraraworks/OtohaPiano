@@ -38,6 +38,7 @@ import { isFullscreenSupported, isFullscreenActive, toggleFullscreen, onFullscre
 import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, makeDrillSteps, type RangeOption } from "./core/drills.ts";
 import { renderStaff } from "./ui/staff.ts";
 import { icon, mountIcons } from "./ui/icons.ts";
+import { midiForKey, shouldPlayKey } from "./core/keyMap.ts";
 import { GuidedPractice } from "./core/guidedPractice.ts";
 
 /** 型付きで要素を引く。無ければ組み立てのミスなので即座に落とす。 */
@@ -883,6 +884,38 @@ for (const btn of document.querySelectorAll<HTMLElement>(".beats")) {
     renderMetroLamps();
   });
 }
+
+// ---- パソコンのキーボードで弾く ----------------------------------------------
+//
+// タブレットが主なので、これは大人向けの隠し機能。画面には出していない。
+// 画面の鍵盤と同じ道を通すので、打鍵の記録も おとあて の判定も、
+// このために書いたコードは無い。
+
+/** 今どのキーで鳴らしているか。押し始めた時点の鍵を覚えておく。 */
+const pressedKeys = new Map<string, number>();
+
+window.addEventListener("keydown", (e) => {
+  if (!shouldPlayKey(e)) return;
+  const midi = midiForKey(e.code, keyboard.getStartMidi());
+  if (midi === null) return;
+  e.preventDefault();
+  // 押している間にオクターブを動かされても、離すときに元の鍵を離せるようにする。
+  pressedKeys.set(e.code, midi);
+  keyboard.pressExternal(midi);
+});
+
+window.addEventListener("keyup", (e) => {
+  const midi = pressedKeys.get(e.code);
+  if (midi === undefined) return;
+  pressedKeys.delete(e.code);
+  keyboard.releaseExternal(midi);
+});
+
+// 画面から離れている間に離されると keyup が来ない。戻ったときに鳴りっぱなしにしない。
+window.addEventListener("blur", () => {
+  for (const midi of pressedKeys.values()) keyboard.releaseExternal(midi);
+  pressedKeys.clear();
+});
 
 // ---- 後片付け --------------------------------------------------------------
 

@@ -140,6 +140,25 @@ export class Keyboard {
     }
   }
 
+  /**
+   * 画面の外（パソコンのキーボード）から押す / 離す。
+   * 指の管理と同じ仕組みに乗せるので、見た目も音も、押し直しの扱いも指と同じになる。
+   * 指の pointerId と衝突しない負の番号を、鍵ごとに割り当てる。
+   */
+  private externalPointerId(midi: number): number {
+    return -1000 - midi;
+  }
+
+  pressExternal(midi: number): void {
+    if (!this.keyEls.has(midi)) return; // 画面に出ていない鍵は鳴らさない
+    if (this.touching.has(this.externalPointerId(midi))) return;
+    this.press(this.externalPointerId(midi), midi);
+  }
+
+  releaseExternal(midi: number): void {
+    this.release(this.externalPointerId(midi));
+  }
+
   /** 全部離す(画面切り替え・お手本の停止時)。 */
   releaseAll(): void {
     for (const id of [...this.touching.keys()]) this.release(id);
