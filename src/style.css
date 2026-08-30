@@ -4,19 +4,48 @@
    色はアイコン(ラベンダーの音符キャラ)に合わせた紫系。 */
 
 :root {
-  --bg: #1b1630;
-  --bg-2: #241d40;
-  --bg-3: #2f2652;
-  --line: #453a72;
-  --fg: #f3efff;
-  --fg-dim: #b3a8d8;
-  --accent: #ffcf5c; /* お手本の光。暗い紫の上でいちばん目を引く色 */
-  --accent-2: #7bd7ff;
-  --danger: #ff7b8a;
-  --key-white: #fdfbff;
-  --key-white-down: #ffe9a8;
-  --key-black: #2a2340;
-  --key-black-down: #6b5a2a;
+  /* 色はここだけで決める。以降のルールに生の色は書かない
+     (テーマを差し替えるとき、探し回らずに済むようにするため)。
+     やさしい明るめ。地はほんのり紫がかった白で、キャラのラベンダーと地続きにする。 */
+  --bg: #f6f1fb;
+  --bg-2: #ffffff;
+  --bg-3: #ece4f8;
+  /* 押している間の色。明るい地では「少し沈む」方向に振る。 */
+  --bg-4: #ddd0f0;
+  --line: #ddd2ee;
+  /* 以下の薄い色は、小さい字(ふりがな・鍵盤のドレミ・ボタンの副ラベル)でも
+     読めるよう、地に対して 4.5:1 以上を確保した値。明るい地では暗い地より
+     濃くしないと足りない(実際に足りていなかった)。 */
+  --fg: #443a5e;
+  --fg-dim: #6b5f88;
+  --fg-faint: #948aad;
+  /* お手本の光と「選んでいる」印。明るい地の上でも沈まない濃さの琥珀色。 */
+  --accent: #ffc247;
+  --accent-ink: #5a3c00;
+  --accent-ink-dim: #6e4e08;
+  --accent-shadow: #d99b1f;
+  /* 琥珀を「文字色」として使うとき用。地の上に置く色なので、塗りの琥珀のままでは
+     明るい地に埋もれて読めない(1.45:1 だった)。 */
+  --accent-text: #8a5f00;
+  --accent-2: #57b8e8;
+  --danger: #c4304a;
+  --danger-ink: #ffffff;
+  /* 鍵盤。白鍵は地より白く、輪郭をはっきりさせて「鍵盤」に見せる。 */
+  --key-white: #ffffff;
+  --key-white-down: #ffe6a3;
+  --key-border: #c9bee0;
+  --key-black: #3a3350;
+  --key-black-down: #7a6528;
+  --key-black-border: #241f36;
+  --key-guide-white: #ffeeb8;
+  --key-guide-black: #8a7333;
+  --key-label: #7b6f98;
+  /* 動画の下地。映像が来るまでの間や 16:9 の余白なので、地の色ではなく黒のまま。 */
+  --video-bed: #000000;
+  /* お知らせは地と反転させて、短時間でも確実に目に入るようにする。 */
+  --toast-bg: #443a5e;
+  --toast-fg: #ffffff;
+  --start-glow: #ffffff;
   --radius: 12px;
   /* ふりがな(ruby)のぶんボタンが縦に伸びるので、行の高さを最初から確保しておく。 */
   --ctl-h: 52px;
@@ -61,7 +90,7 @@ ruby rt {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: radial-gradient(circle at 50% 35%, #3a2f66, var(--bg) 70%);
+  background: radial-gradient(circle at 50% 35%, var(--start-glow), var(--bg) 70%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -94,17 +123,17 @@ ruby rt {
   padding: 16px 56px;
   font-size: 1.5rem;
   font-family: inherit;
-  color: #3a2a00;
+  color: var(--accent-ink);
   background: var(--accent);
   border: none;
   border-radius: 999px;
-  box-shadow: 0 6px 0 #c79b2e;
+  box-shadow: 0 6px 0 var(--accent-shadow);
   cursor: pointer;
 }
 
 .start-button:active {
   transform: translateY(4px);
-  box-shadow: 0 2px 0 #c79b2e;
+  box-shadow: 0 2px 0 var(--accent-shadow);
 }
 
 .start-note {
@@ -199,7 +228,7 @@ ruby rt {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  background: #000;
+  background: var(--video-bed);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -276,17 +305,17 @@ ruby rt {
 }
 
 .ctl:active {
-  background: #423670;
+  background: var(--bg-4);
 }
 
 .ctl.is-on {
   background: var(--accent);
-  color: #3a2a00;
+  color: var(--accent-ink);
   border-color: var(--accent);
 }
 
 .ctl.is-on small {
-  color: #6b5010;
+  color: var(--accent-ink-dim);
 }
 
 .ctl.big {
@@ -338,7 +367,7 @@ ruby rt {
 
 .loop-status {
   font-size: 0.8rem;
-  color: var(--accent);
+  color: var(--accent-text);
   min-height: 1.1em;
 }
 
@@ -379,12 +408,13 @@ ruby rt {
   border: none;
   border-bottom: 3px solid transparent;
   border-radius: 0;
-  background: var(--bg-2);
+  /* 選んでいないタブを沈め、選んでいるタブは中身と同じ地にして繋げる。 */
+  background: var(--bg-3);
   font-size: 0.9rem;
 }
 
 .tab.is-on {
-  background: var(--bg-3);
+  background: var(--bg-2);
   border-bottom-color: var(--accent);
 }
 
@@ -439,7 +469,7 @@ ruby rt {
   min-height: 44px;
   padding: 0 16px;
   background: var(--accent);
-  color: #3a2a00;
+  color: var(--accent-ink);
   border-color: var(--accent);
   font-size: 0.95rem;
 }
@@ -453,7 +483,7 @@ ruby rt {
 
 .btn-rec.is-recording {
   background: var(--danger);
-  color: #3a0008;
+  color: var(--danger-ink);
   border-color: var(--danger);
   animation: rec-pulse 1s infinite;
 }
@@ -518,7 +548,7 @@ ruby rt {
   height: 54px;
   object-fit: cover;
   border-radius: 6px;
-  background: #000;
+  background: var(--video-bed);
   flex: 0 0 auto;
 }
 
@@ -697,12 +727,12 @@ ruby rt {
 
 .doremi-item.is-now {
   background: var(--accent);
-  color: #3a2a00;
+  color: var(--accent-ink);
   font-weight: 700;
 }
 
 .doremi-item.is-past {
-  color: #6f649a;
+  color: var(--fg-faint);
 }
 
 .doremi-print {
@@ -721,7 +751,8 @@ ruby rt {
 
 .keys-area {
   flex: 0 0 auto;
-  background: var(--bg-2);
+  /* 白鍵が地に溶けないよう、鍵盤の下地だけ一段沈める(本物のピアノの胴体にあたる)。 */
+  background: var(--bg-3);
   border-top: 1px solid var(--line);
   padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
   display: flex;
@@ -763,7 +794,7 @@ ruby rt {
   width: var(--white-w);
   height: 100%;
   background: var(--key-white);
-  border: 1px solid #b9b0d0;
+  border: 1px solid var(--key-border);
   z-index: 1;
   display: flex;
   align-items: flex-end;
@@ -775,13 +806,13 @@ ruby rt {
   width: var(--black-w);
   height: 62%;
   background: var(--key-black);
-  border: 1px solid #100c1e;
+  border: 1px solid var(--key-black-border);
   z-index: 2;
 }
 
 .key-label {
   font-size: 0.8rem;
-  color: #6f649a;
+  color: var(--key-label);
   /* 指が触れるのは鍵そのものであって、この文字ではない。 */
   pointer-events: none;
   /* body で消しているが、鍵盤は長押しされる場所なので取りこぼさないようここでも明示する。 */
@@ -808,11 +839,11 @@ ruby rt {
 }
 
 .key-white.key-guide {
-  background: #fff4d0;
+  background: var(--key-guide-white);
 }
 
 .key-black.key-guide {
-  background: #7a6528;
+  background: var(--key-guide-black);
 }
 
 /* ---- お知らせ ---------------------------------------------------------- */
@@ -824,8 +855,9 @@ ruby rt {
   transform: translateX(-50%);
   z-index: 90;
   padding: 12px 20px;
-  background: #100c1e;
-  border: 1px solid var(--line);
+  background: var(--toast-bg);
+  color: var(--toast-fg);
+  border: 1px solid var(--toast-bg);
   border-radius: 999px;
   font-size: 0.9rem;
   pointer-events: none;
@@ -840,6 +872,11 @@ ruby rt {
 @media (max-width: 860px), (orientation: portrait) {
   .stage {
     flex-direction: column;
+    /* 積み上げると縦が足りなくなる端末がある。鍵盤は下に固定したまま、
+       上半分だけスクロールで届くようにする(一覧が画面外へ押し出されて
+       タブごと触れなくなっていた)。 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .side-pane {
@@ -855,6 +892,12 @@ ruby rt {
   .video-frame {
     aspect-ratio: 16 / 9;
     flex: 0 0 auto;
+    /* 幅いっぱいの 16:9 は縦を食いすぎる(800px 幅なら 450px)。
+       スクロールせずに一覧のタブまで見えるところで頭を打たせる。 */
+    max-height: 34vh;
+    /* 高さで頭打ちになったぶん、横は中央に寄せて黒帯を左右に均等につける。 */
+    margin: 0 auto;
+    width: 100%;
   }
 }
 
