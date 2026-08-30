@@ -184,9 +184,14 @@
 
             <div class="practice-now" id="practice-now" hidden>
               <div class="practice-head">
+                <span class="question-no" id="question-no"></span>
                 <span class="practice-name" id="practice-name"></span>
                 <button class="icon-btn" id="btn-practice-quit" type="button" aria-label="やめる">✕</button>
               </div>
+
+              <!-- 合っていたか外れていたかを、次のおだいの前にはっきり出す。
+                   出題そのものと同じ場所に出して、目を動かさずに済むようにする。 -->
+              <div class="judge" id="judge" hidden aria-live="polite"></div>
 
               <div class="prompt-strip" id="prompt-strip" hidden></div>
               <div class="prompt-sound" id="prompt-sound" hidden>

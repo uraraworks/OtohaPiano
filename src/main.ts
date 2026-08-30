@@ -99,7 +99,9 @@ let survival = loadJson<boolean>("survival", false);
  * 間を空けないと、押した音と次のおだいの音が重なって聞き分けられない。
  * 目でも、正解した実感が持てないまま次が出てしまう。
  */
-const NEXT_GAP_MS = 550;
+const NEXT_GAP_MS = 700;
+/** 間違えたときに ✗ を出しておく時間。正解のときより少し長くする。 */
+const WRONG_GAP_MS = 900;
 /** 間を空けている最中。この間の打鍵は数えない(まだ出ていないおだいに対する判定になるため)。 */
 let waitingNext: number | null = null;
 /** レベルごとの最高記録(音/分)。次に開いたときの目標になる。 */
@@ -253,7 +255,21 @@ for (const tab of document.querySelectorAll<HTMLElement>(".tab")) {
     for (const p of document.querySelectorAll(".panel")) p.classList.remove("is-on");
     tab.classList.add("is-on");
     document.querySelector(`.panel[data-panel="${tab.dataset.tab}"]`)?.classList.add("is-on");
+    updateStageForTab(tab.dataset.tab ?? "");
   });
+}
+
+/**
+ * おとあては動画と関係がないので、そのタブの間は動画の枠ごと畳んで幅を練習に回す。
+ *
+ * 畳む前に必ず止める。「映像を隠したまま音だけ流す」は YouTube の規約で不可であり、
+ * 隠した状態で再生を続けられる作りにしてはいけない。
+ * (そもそも音だけ流したい用途は、この規約のために最初から支えない。)
+ */
+function updateStageForTab(tabName: string): void {
+  const hide = tabName === "practice";
+  if (hide && player.isPlaying()) player.pause();
+  document.querySelector(".stage")?.classList.toggle("stage-no-video", hide);
 }
 
 // ---- ライブラリ ------------------------------------------------------------
@@ -959,6 +975,7 @@ function startDrill(level: DrillLevel): void {
   $("practice-name").textContent = level.name;
   $("btn-practice-hint").hidden = false;
   $("btn-practice-retry").hidden = true;
+  hideJudge();
   presentStep(true);
   renderDrills();
 }
@@ -989,13 +1006,38 @@ function stopDrill(): void {
  * 今の手を提示する。
  * @param playSound 音のおだいを鳴らすか。表示だけ作り直すときは false。
  */
+/** おだいの表示をまとめて出す/隠す。合否の印と入れ替えるのに使う。 */
+function showPrompt(show: boolean): void {
+  $("prompt-strip").hidden = !show || promptMode !== "letter";
+  $("prompt-sound").hidden = !show || promptMode !== "sound";
+  $("prompt-staff").hidden = !show || promptMode !== "staff";
+}
+
+/**
+ * 合否の印。次のおだいへ進む前に、必ずここを通す。
+ * 間を空けるだけだと「合っていたのか」が分からないまま次が出てしまう。
+ */
+function showJudge(ok: boolean, note?: string): void {
+  const el = $("judge");
+  el.hidden = false;
+  el.classList.toggle("is-ok", ok);
+  el.classList.toggle("is-ng", !ok);
+  el.innerHTML = ok ? `◎${note ? `<small>${note}</small>` : ""}` : `✗${note ? `<small>${note}</small>` : ""}`;
+  showPrompt(false);
+}
+
+function hideJudge(): void {
+  $("judge").hidden = true;
+}
+
 function presentStep(playSound: boolean): void {
   const p = practice;
   if (!p) return;
   keyboard.clearGuide();
-  $("prompt-strip").hidden = promptMode !== "letter";
-  $("prompt-sound").hidden = promptMode !== "sound";
-  $("prompt-staff").hidden = promptMode !== "staff";
+  hideJudge();
+  showPrompt(true);
+  // クイズ番組のように、何問目かを出してから次のおだいに入る。
+  $("question-no").textContent = `だい ${p.progress.step} もん`;
 
   if (promptMode === "light") {
     for (const midi of p.remaining) keyboard.setGuide(midi, true);
@@ -1085,6 +1127,8 @@ function onPracticePress(midi: number): void {
   // 間を空けている最中は、まだ次のおだいが出ていない。
   // ここで判定すると「見ていないもの」を間違い扱いにしてしまう。
   if (!p || waitingNext !== null) return;
+  // press で次へ進んでしまうので、今の手を先に控える(◎ の脇に出すため)。
+  const answeredStep = p.current;
   const result = p.press(midi);
 
   if (result.kind === "wrong") {
@@ -1093,10 +1137,16 @@ function onPracticePress(midi: number): void {
       failSurvival(midi);
       return;
     }
-    // 責めない。進まないことが、そのまま「ちがう」の合図になる。
-    // 音のおだいだけは鳴らしなおす（聞き逃した可能性の方が高いため）。
-    if (promptMode === "sound") playCurrentPrompt();
+    // ✗ を出してから、同じおだいに戻す。責めるためではなく、
+    // 「今のは違った」と分かってから考え直せるようにするため。
+    showJudge(false, `おしたのは ${noteNameJa(midi)}`);
     updateStats();
+    waitingNext = window.setTimeout(() => {
+      waitingNext = null;
+      if (practice !== p) return;
+      // 同じおだいのまま。音のおだいは鳴らしなおす(聞き逃した可能性の方が高い)。
+      presentStep(promptMode === "sound");
+    }, WRONG_GAP_MS);
     return;
   }
 
@@ -1110,6 +1160,7 @@ function onPracticePress(midi: number): void {
   }
 
   stats.hits++;
+  const answered = labelOf(answeredStep);
   // 残りが減ったところで継ぎ足す。押し切ってから足すと、
   // 一瞬「終わった」状態を通ってしまう。
   if (drillLevel && p.remainingSteps <= 4) {
@@ -1118,9 +1169,10 @@ function onPracticePress(midi: number): void {
     drillLabels = [...drillLabels, ...more.map(labelOf)];
   }
 
-  // すぐ次を出さず、少し間を置く。押した音を聞き終える時間と、
-  // 「正解した」と分かる時間をつくるため。
+  // すぐ次を出さず、◎ を出して間を置く。押した音を聞き終える時間と、
+  // 「合っていた」と分かる時間をつくるため。
   keyboard.clearGuide();
+  showJudge(true, answered);
   updateStats();
   waitingNext = window.setTimeout(() => {
     waitingNext = null;
@@ -1153,12 +1205,13 @@ function failSurvival(pressed: number): void {
   }
 
   practice = null;
+  showJudge(false, `こたえは ${answerText}（おしたのは ${pressedText}）`);
+  $("question-no").textContent = "";
   // 終わったあとに残すのは「もう一度」だけ。ヒントは押しても意味がない。
   $("btn-practice-hint").hidden = true;
   $("btn-practice-retry").hidden = false;
-  $("practice-stats").innerHTML =
-    `<span>${streak} 音 つづきました</span>` +
-    `<span>こたえは <b>${answerText}</b>（おしたのは ${pressedText}）</span>`;
+  // 答えは ✗ の脇に出しているので、ここでは続いた数だけにする。
+  $("practice-stats").innerHTML = `<span>${streak} 音 つづきました</span>`;
   $("practice-best").textContent = isBest ? "さいこう記録！" : `さいこう ${bestStreaks[level.id] ?? 0} 音`;
   toast(isBest && streak > 0 ? `さいこう記録！ ${streak} 音` : `${streak} 音 つづきました`);
   // 答えの光は少し残してから消す。

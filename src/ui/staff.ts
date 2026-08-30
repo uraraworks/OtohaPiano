@@ -25,69 +25,18 @@ function yOf(step: number): number {
 }
 
 /**
- * 渦を計算で描く。
- * ベジエ曲線を手で合わせようとすると、渦の中心が狙った線に乗らない
- * （実際に乗らず、記号として意味をなさない形になった）。
- * 中心・半径・巻き数を数値で決めて点を並べれば、必ず狙った場所に乗る。
+ * 音部記号は「描かない」。
+ *
+ * 渦を計算で描くところまでやったが、どうしても記号として通用する形にならなかった。
+ * 楽譜の記号は形そのものが決まりごとなので、それらしいだけの絵を載せるのは
+ * 覚える相手に対して不誠実になる。代わりに、どちらの記号の五線なのかを文字で書く。
+ * (Unicode の音楽記号 𝄞 は端末にフォントが無いと豆腐になるので使えず、
+ *  記号用フォントの読み込みは「完全静的・外部依存なし」に反する。)
  */
-function spiral(
-  cx: number,
-  cy: number,
-  startR: number,
-  endR: number,
-  startAngleDeg: number,
-  turns: number,
-): string {
-  const steps = 48;
-  const pts: string[] = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const angle = ((startAngleDeg + t * turns * 360) * Math.PI) / 180;
-    const r = startR + (endR - startR) * t;
-    const x = cx + r * Math.cos(angle);
-    const y = cy + r * Math.sin(angle);
-    pts.push(`${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`);
-  }
-  return pts.join(" ");
-}
-
-/**
- * ト音記号。
- * 「ト音（ソ）記号」の名のとおり、渦の中心がソの線に乗っていないと意味をなさない。
- * 位置は目分量ではなく、五線の段から計算した y に合わせてある。
- * 縦の軸（上の巻き〜しっぽ）と渦の 2 本に分けて描く。1 本で描こうとすると
- * 交差の具合をベジエで合わせることになり、狙った位置に乗らない。
- */
-function trebleClef(): string {
-  const gLine = yOf(2); // ソ(G4)の線。渦の中心
-  const top = yOf(11); // 五線の上。上の巻きの先
-  const tail = yOf(-4); // 五線の下。しっぽの先
-  const cx = 42;
-  const stroke = `fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"`;
-
-  // 上の巻きから、五線を貫いて、下のしっぽまで。
-  // 上は左へ大きく張り出させ、下は右へ回してから左に引っかける。
-  // まっすぐ下ろすと記号に見えず、ただの縦線になる。
-  const stem = `M ${cx + 10} ${top}
-    C ${cx - 18} ${top + 5}, ${cx - 20} ${top + 28}, ${cx - 2} ${gLine - 19}
-    C ${cx + 12} ${gLine - 6}, ${cx + 11} ${gLine + 16}, ${cx + 3} ${tail - 9}
-    c -2 8 -10 12 -16 7`;
-
-  return `<path d="${stem}" ${stroke} />
-    <path d="${spiral(cx, gLine, 16, 3, -45, 1.05)}" ${stroke} />`;
-}
-
-/** ヘ音記号。逆向きのかぎ形と、四線目をはさむ 2 つの点。 */
-function bassClef(): string {
-  const cy = yOf(6); // 4 本目の線(ファ)から描き始める
-  return `<path d="
-    M 30 ${cy - 4}
-    c 8 -6 20 -2 20 8
-    c 0 16 -16 26 -28 32"
-    fill="none" stroke="currentColor" stroke-width="2.8"
-    stroke-linecap="round" />
-    <circle cx="56" cy="${cy - 6}" r="2.2" fill="currentColor" />
-    <circle cx="56" cy="${cy + 6}" r="2.2" fill="currentColor" />`;
+function clefLabel(clef: Clef): string {
+  const text = clef === "treble" ? "ト音記号" : "ヘ音記号";
+  return `<text x="16" y="${yOf(4)}" font-size="11" fill="currentColor" opacity="0.75"
+    dominant-baseline="middle" font-family="inherit">${text}</text>`;
 }
 
 /** ♯。黒鍵のときだけ音符の前に付ける。 */
@@ -113,11 +62,11 @@ export function renderStaff(midis: number[], baseMidi: number): string {
   for (let i = 0; i < 5; i++) {
     const y = yOf(i * 2);
     parts.push(
-      `<line x1="14" y1="${y}" x2="${WIDTH - 10}" y2="${y}" stroke="currentColor" stroke-width="1.4" opacity="0.75" />`,
+      `<line x1="62" y1="${y}" x2="${WIDTH - 10}" y2="${y}" stroke="currentColor" stroke-width="1.4" opacity="0.75" />`,
     );
   }
 
-  parts.push(clef === "treble" ? trebleClef() : bassClef());
+  parts.push(clefLabel(clef));
 
   // 加線は和音のどの音にも要るぶんをまとめて 1 回だけ引く。
   const ledgers = new Set<number>();

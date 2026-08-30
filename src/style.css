@@ -55,6 +55,16 @@
   box-sizing: border-box;
 }
 
+/* hidden 属性を常に効かせる。
+   クラス側で display を指定していると(.ctl の inline-flex、.rec-row の flex など)、
+   ブラウザ既定の [hidden] { display: none } に勝ってしまい、
+   hidden を立てても消えない。実際に「もういちど」ボタンが出たままになり、
+   マイクの無い端末で録音ボタンが消えない不具合にも繋がっていた。
+   個別に .ctl[hidden] を足していく方式は書き漏らすので、ここで一括で押さえる。 */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -98,9 +108,6 @@ ruby rt {
   gap: 8px;
 }
 
-.start-overlay[hidden] {
-  display: none;
-}
 
 .start-icon {
   width: min(38vh, 180px);
@@ -179,9 +186,6 @@ ruby rt {
   cursor: pointer;
 }
 
-.app-fullscreen[hidden] {
-  display: none;
-}
 
 .app-version {
   /* 全画面ボタンが出ない環境(iPhone)でも版表示が右端に来るよう、こちらにも auto を置く。 */
@@ -204,9 +208,6 @@ ruby rt {
   flex-direction: column;
 }
 
-.app[hidden] {
-  display: none;
-}
 
 .stage {
   flex: 1 1 auto;
@@ -260,6 +261,15 @@ ruby rt {
   border-radius: var(--radius);
   color: var(--fg-dim);
   text-align: center;
+}
+
+/* 動画を畳んでいる間は、空いた幅をそのまま練習側に渡す。 */
+.stage.stage-no-video .video-pane {
+  display: none;
+}
+
+.stage.stage-no-video .side-pane {
+  flex: 1 1 auto;
 }
 
 .side-pane {
@@ -335,9 +345,6 @@ ruby rt {
   gap: 6px;
 }
 
-.video-controls[hidden] {
-  display: none;
-}
 
 .seek-row {
   display: flex;
@@ -448,9 +455,6 @@ ruby rt {
   border-radius: var(--radius);
 }
 
-.practice-now[hidden] {
-  display: none;
-}
 
 .practice-head {
   display: flex;
@@ -509,6 +513,41 @@ ruby rt {
   }
 }
 
+.question-no {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  font-size: 0.85rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 合否の印。おだいと同じ場所に出すので、高さはおだい側と揃えておく
+   (揃えないと出るたびに下の内容が跳ねる)。 */
+.judge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.judge.is-ok {
+  color: var(--accent-text);
+}
+
+.judge.is-ng {
+  color: var(--danger);
+}
+
+.judge small {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--fg-dim);
+}
+
 /* おだいの並び。タイピングソフトのように、今の文字を強調して先を見せる。 */
 .prompt-strip {
   display: flex;
@@ -518,9 +557,6 @@ ruby rt {
   padding: 4px 0;
 }
 
-.prompt-strip[hidden] {
-  display: none;
-}
 
 .prompt-strip::-webkit-scrollbar {
   display: none;
@@ -554,9 +590,6 @@ ruby rt {
   color: var(--fg);
 }
 
-.prompt-staff[hidden] {
-  display: none;
-}
 
 .staff-svg {
   width: 168px;
@@ -570,18 +603,12 @@ ruby rt {
   gap: 10px;
 }
 
-.prompt-sound[hidden] {
-  display: none;
-}
 
 .prompt-sound-note {
   font-size: 0.78rem;
   color: var(--fg-dim);
 }
 
-.practice-bar[hidden] {
-  display: none;
-}
 
 .practice-stats {
   display: flex;
@@ -590,9 +617,6 @@ ruby rt {
   font-variant-numeric: tabular-nums;
 }
 
-.practice-stats[hidden] {
-  display: none;
-}
 
 .practice-stats b {
   font-size: 1.1rem;
@@ -910,9 +934,6 @@ ruby rt {
   border-bottom: 1px solid var(--line);
 }
 
-.doremi[hidden] {
-  display: none;
-}
 
 .doremi-track {
   flex: 1 1 auto;
@@ -1075,9 +1096,6 @@ ruby rt {
   pointer-events: none;
 }
 
-.toast[hidden] {
-  display: none;
-}
 
 /* ---- 縦向き・狭い画面 --------------------------------------------------- */
 
