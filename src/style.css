@@ -367,14 +367,20 @@ ruby rt {
   margin: 0 auto;
 }
 
-/* 合否の印は文字ではなく図形。おだいと同じ大きさまで引き伸ばす。 */
+/* 合否の印は文字ではなく図形。おだいと同じ大きさまで引き伸ばす。
+   大きさは画面の高さ(vh)ではなく、入れ物の高さに収まる範囲で決める。
+   vh だけで決めると、画面は高いのにおだいの枠が低い端末(iPhone など)で
+   枠からはみ出し、上下が切れる。 */
 .judge .icon {
-  width: clamp(3.5rem, 16vh, 9rem);
+  flex: 0 1 auto;
+  min-height: 0;
   height: clamp(3.5rem, 16vh, 9rem);
+  max-height: 100%;
+  width: auto;
+  aspect-ratio: 1;
 }
 
 .judge.is-ok .icon {
-  width: clamp(4.5rem, 22vh, 13rem);
   height: clamp(4.5rem, 22vh, 13rem);
 }
 
@@ -787,6 +793,9 @@ ruby rt {
   align-items: center;
   justify-content: center;
   gap: 2px;
+  /* 印が入れ物より大きくなれないよう、高さを受け取っておく。 */
+  height: 100%;
+  min-height: 0;
   color: var(--danger);
   font-size: clamp(3.5rem, 16vh, 9rem);
   font-weight: 700;
@@ -1364,6 +1373,44 @@ ruby rt {
 
 
 /* ---- 縦向き・狭い画面 --------------------------------------------------- */
+
+/* ---- 狭い画面(スマートフォン) ------------------------------------------- */
+
+@media (max-width: 520px) {
+  /* 説明の一文は畳む。名前と版だけ残せば 1 行に収まる
+     (折り返すと、ただでさえ狭い縦を 3 行ぶん食う)。 */
+  .app-tagline {
+    display: none;
+  }
+
+  .app-header {
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .app-version {
+    font-size: 0.62rem;
+    text-align: right;
+    line-height: 1.2;
+  }
+
+  /* タブの字が折り返すと、行が 2 段になって中身が押し出される。 */
+  .tab {
+    font-size: 0.72rem;
+    gap: 3px;
+    min-height: 44px;
+  }
+
+  .tab .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* 鍵が狭いと「ファ」が 2 行に割れる。字を小さくして 1 行に収める。 */
+  .key-label {
+    font-size: 0.6rem;
+  }
+}
 
 @media (max-width: 860px), (orientation: portrait) {
   .stage {
