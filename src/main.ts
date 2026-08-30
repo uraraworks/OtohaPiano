@@ -37,6 +37,7 @@ import { newId, loadJson, saveJson } from "./core/storage.ts";
 import { isFullscreenSupported, isFullscreenActive, toggleFullscreen, onFullscreenChange } from "./core/fullscreen.ts";
 import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, makeDrillSteps, type RangeOption } from "./core/drills.ts";
 import { renderStaff } from "./ui/staff.ts";
+import { icon, mountIcons } from "./ui/icons.ts";
 import { GuidedPractice } from "./core/guidedPractice.ts";
 
 /** 型付きで要素を引く。無ければ組み立てのミスなので即座に落とす。 */
@@ -164,7 +165,7 @@ if (isFullscreenSupported()) {
   // Esc や端末の戻る操作でも全画面は解除される。表示は必ず実際の状態から作る。
   const syncFullscreenButton = (): void => {
     const active = isFullscreenActive();
-    btn.textContent = active ? "⤢" : "⛶";
+    btn.innerHTML = icon(active ? "fullscreenExit" : "fullscreen");
     btn.setAttribute("aria-label", active ? "全画面をやめる" : "全画面");
   };
   onFullscreenChange(syncFullscreenButton);
@@ -185,8 +186,9 @@ $("start-button").addEventListener("click", () => {
     }
     player.onTick = onVideoTick;
     player.onStatus = (s) => {
-      $("btn-play").textContent = s === "playing" ? "⏸" : "▶";
+      $("btn-play").innerHTML = icon(s === "playing" ? "pause" : "play");
     };
+    mountIcons();
     renderLibrary();
     renderTakes();
     renderMemos();
@@ -313,7 +315,7 @@ function renderLibrary(): void {
     const del = document.createElement("button");
     del.type = "button";
     del.className = "icon-btn";
-    del.textContent = "🗑";
+    del.innerHTML = icon("trash");
     del.setAttribute("aria-label", `${entry.title} を一覧から消す`);
     del.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -479,7 +481,7 @@ function updateLoopStatus(): void {
   const loop = player.getLoop();
   const el = $("loop-status");
   if (loop) {
-    el.textContent = `🔁 ${formatTime(loop.start)} 〜 ${formatTime(loop.end)} を くりかえし`;
+    el.innerHTML = `${icon("loop")} ${formatTime(loop.start)} 〜 ${formatTime(loop.end)} を くりかえし`;
   } else if (pointA !== null) {
     el.textContent = `A = ${formatTime(pointA)}（B を おすと くりかえし はじまります）`;
   } else {
@@ -508,7 +510,7 @@ function renderMarks(): void {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "mark";
-    btn.innerHTML = `📍 ${mark.label} <span class="del">✕</span>`;
+    btn.innerHTML = `${icon("pin")} ${mark.label} <span class="del">${icon("cross")}</span>`;
     btn.addEventListener("click", (e) => {
       if (!currentVideo) return;
       if ((e.target as HTMLElement).classList.contains("del")) {
@@ -541,7 +543,7 @@ function startKeyRecording(): void {
   recordingKeys = true;
   const btn = $("btn-rec-keys");
   btn.classList.add("is-recording");
-  btn.textContent = "■ ろくおんを おわる";
+  btn.innerHTML = `${icon("stop")} ろくおんを おわる`;
   $("rec-status").textContent =
     recordingVideoId !== null ? "動画に あわせて ろくおん中…" : "ろくおん中…（動画なし）";
 }
@@ -551,7 +553,7 @@ function finishKeyRecording(): void {
   const result = keyRecorder.finish(recordTime());
   const btn = $("btn-rec-keys");
   btn.classList.remove("is-recording");
-  btn.innerHTML = "● <ruby>打鍵<rt>だけん</rt></ruby>を ろくおん";
+  btn.innerHTML = `${icon("record")} <ruby>打鍵<rt>だけん</rt></ruby>を ろくおん`;
   $("rec-status").textContent = "";
   if (!result) {
     toast("けんばんが おされませんでした");
@@ -587,7 +589,7 @@ function renderTakes(): void {
     const play = document.createElement("button");
     play.type = "button";
     play.className = "icon-btn";
-    play.textContent = take.id === playingTakeId ? "■" : "▶";
+    play.innerHTML = icon(take.id === playingTakeId ? "stop" : "play");
     play.addEventListener("click", () => {
       if (take.id === playingTakeId) stopTakePlayback();
       else startTakePlayback(take);
@@ -604,7 +606,7 @@ function renderTakes(): void {
     const del = document.createElement("button");
     del.type = "button";
     del.className = "icon-btn";
-    del.textContent = "🗑";
+    del.innerHTML = icon("trash");
     del.setAttribute("aria-label", `${take.name} を消す`);
     del.addEventListener("click", () => {
       if (!confirm("この おてほんを けしますか？")) return;
@@ -713,7 +715,7 @@ async function toggleMemoRecording(): Promise<void> {
   if (memoRecorder.recording) {
     const result = await memoRecorder.stop();
     btn.classList.remove("is-recording");
-    btn.textContent = "● マイクで ろくおん";
+    btn.innerHTML = `${icon("record")} マイクで ろくおん`;
     $("memo-status").textContent = "";
     if (!result) {
       toast("ろくおん できませんでした");
@@ -743,7 +745,7 @@ async function toggleMemoRecording(): Promise<void> {
     return;
   }
   btn.classList.add("is-recording");
-  btn.textContent = "■ ろくおんを おわる";
+  btn.innerHTML = `${icon("stop")} ろくおんを おわる`;
   $("memo-status").textContent = "ろくおん中…";
 }
 
@@ -758,7 +760,7 @@ function renderMemos(): void {
     const play = document.createElement("button");
     play.type = "button";
     play.className = "icon-btn";
-    play.textContent = "▶";
+    play.innerHTML = icon("play");
     play.addEventListener("click", () => void playMemo(memo, play));
 
     const name = document.createElement("span");
@@ -772,7 +774,7 @@ function renderMemos(): void {
     const del = document.createElement("button");
     del.type = "button";
     del.className = "icon-btn";
-    del.textContent = "🗑";
+    del.innerHTML = icon("trash");
     del.setAttribute("aria-label", `${memo.name} を消す`);
     del.addEventListener("click", () => {
       void (async () => {
@@ -792,10 +794,18 @@ async function playMemo(memo: MemoMeta, btn: HTMLElement): Promise<void> {
   if (memoAudio) {
     memoAudio.pause();
     memoAudio = null;
-    for (const b of document.querySelectorAll(".memo-item .icon-btn")) {
-      if (b.textContent === "■") b.textContent = "▶";
+    for (const b of document.querySelectorAll<HTMLElement>(".memo-item .icon-btn")) {
+      if (b.dataset.playing === "1") {
+        b.innerHTML = icon("play");
+        delete b.dataset.playing;
+      }
     }
-    if (btn.textContent === "■") return; // 同じものを押したら停止だけして終わり
+    // 同じものを押したら停止だけして終わり
+    if (btn.dataset.playing === "1") {
+      delete btn.dataset.playing;
+      btn.innerHTML = icon("play");
+      return;
+    }
   }
   const url = await memoUrl(memo.id);
   if (!url) {
@@ -807,13 +817,15 @@ async function playMemo(memo: MemoMeta, btn: HTMLElement): Promise<void> {
   audio.preservesPitch = true;
   audio.playbackRate = player.getRate();
   audio.addEventListener("ended", () => {
-    btn.textContent = "▶";
+    btn.innerHTML = icon("play");
+    delete btn.dataset.playing;
     URL.revokeObjectURL(url);
     memoAudio = null;
   });
   await audio.play();
   memoAudio = audio;
-  btn.textContent = "■";
+  btn.innerHTML = icon("stop");
+  btn.dataset.playing = "1";
 }
 
 // ---- メトロノーム ----------------------------------------------------------
@@ -837,7 +849,9 @@ metronome.onBeat = (beat) => {
 $("btn-metro").addEventListener("click", () => {
   const running = metronome.toggle();
   const btn = $("btn-metro");
-  btn.innerHTML = running ? "■<small>ストップ</small>" : "▶<small>スタート</small>";
+  btn.innerHTML = running
+    ? `${icon("stop")}<small>ストップ</small>`
+    : `${icon("play")}<small>スタート</small>`;
   btn.classList.toggle("is-on", running);
   if (!running) for (const lamp of $("metro-lamps").children) lamp.classList.remove("is-on");
 });
@@ -1119,7 +1133,7 @@ function showJudge(ok: boolean, note?: string): void {
   el.hidden = false;
   el.classList.toggle("is-ok", ok);
   el.classList.toggle("is-ng", !ok);
-  el.innerHTML = `<span>${ok ? "◎" : "✗"}</span>${note ? `<small>${note}</small>` : ""}`;
+  el.innerHTML = `${icon(ok ? "circleMark" : "crossMark")}${note ? `<small>${note}</small>` : ""}`;
   showPrompt(false);
 }
 
@@ -1231,8 +1245,8 @@ function directionHint(pressed: number, answer: number[]): string {
   // 和音のときは、押した音にいちばん近い答えを基準にする。
   const target = answer.reduce((a, b) => (Math.abs(b - pressed) < Math.abs(a - pressed) ? b : a));
   return pressed < target
-    ? "もっと<ruby>高<rt>たか</rt></ruby>い<ruby>音<rt>おと</rt></ruby> ⬆"
-    : "もっと<ruby>低<rt>ひく</rt></ruby>い<ruby>音<rt>おと</rt></ruby> ⬇";
+    ? `もっと<ruby>高<rt>たか</rt></ruby>い<ruby>音<rt>おと</rt></ruby> ${icon("up")}`
+    : `もっと<ruby>低<rt>ひく</rt></ruby>い<ruby>音<rt>おと</rt></ruby> ${icon("down")}`;
 }
 
 function onPracticePress(midi: number): void {

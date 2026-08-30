@@ -46,7 +46,7 @@
       </p>
       <!-- iPhone の Safari は <video> 以外の全画面 API を持たないので、
            このボタンは対応環境(Android / iPad / PC)でだけ出す。判定は main.ts 側。 -->
-      <button class="app-fullscreen" id="btn-fullscreen" type="button" hidden aria-label="全画面">⛶</button>
+      <button class="app-fullscreen" id="btn-fullscreen" type="button" hidden aria-label="全画面"></button>
       <span class="app-version" id="app-version"></span>
     </header>
 
@@ -65,27 +65,27 @@
 
           <div class="video-controls" id="video-controls" hidden>
             <div class="seek-row">
-              <button class="ctl" id="btn-play" type="button" aria-label="再生／一時停止">▶</button>
+              <button class="ctl" id="btn-play" type="button" aria-label="再生／一時停止" data-icon="play"></button>
               <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="再生位置" />
               <span class="time" id="time-label">0:00 / 0:00</span>
             </div>
 
             <div class="ctl-row">
               <span class="ctl-group" role="group" aria-label="再生速度">
-                <button class="ctl rate" data-rate="0.5" type="button">🐢<small>0.5</small></button>
-                <button class="ctl rate" data-rate="0.75" type="button">🚶<small>0.75</small></button>
-                <button class="ctl rate is-on" data-rate="1" type="button">🏃<small>1.0</small></button>
+                <button class="ctl rate" data-rate="0.5" type="button" data-icon="turtle"><small>0.5</small></button>
+                <button class="ctl rate" data-rate="0.75" type="button" data-icon="walk"><small>0.75</small></button>
+                <button class="ctl rate is-on" data-rate="1" type="button" data-icon="run"><small>1.0</small></button>
               </span>
 
               <span class="ctl-group" role="group" aria-label="くりかえし">
                 <button class="ctl" id="btn-a" type="button">A<small>ここから</small></button>
                 <button class="ctl" id="btn-b" type="button">B<small>ここまで</small></button>
-                <button class="ctl" id="btn-loop" type="button">🔁<small>くりかえし</small></button>
-                <button class="ctl" id="btn-loop-clear" type="button">✕<small>とりけし</small></button>
+                <button class="ctl" id="btn-loop" type="button" data-icon="loop"><small>くりかえし</small></button>
+                <button class="ctl" id="btn-loop-clear" type="button" data-icon="cross"><small>とりけし</small></button>
               </span>
 
               <span class="ctl-group">
-                <button class="ctl" id="btn-mark" type="button">📍<small>ここを おぼえる</small></button>
+                <button class="ctl" id="btn-mark" type="button" data-icon="pin"><small>ここを おぼえる</small></button>
               </span>
             </div>
 
@@ -96,13 +96,13 @@
 
         <aside class="side-pane">
           <nav class="tabs" role="tablist">
-            <button class="tab is-on" data-tab="library" type="button" role="tab">
-              🎬 <ruby>曲<rt>きょく</rt></ruby>
+            <button class="tab is-on" data-tab="library" type="button" role="tab" data-icon="film">
+              <ruby>曲<rt>きょく</rt></ruby>
             </button>
-            <button class="tab" data-tab="takes" type="button" role="tab">✨ おてほん</button>
-            <button class="tab" data-tab="practice" type="button" role="tab">🎯 おとあて</button>
-            <button class="tab" data-tab="tools" type="button" role="tab">
-              🥁 <ruby>道具<rt>どうぐ</rt></ruby>
+            <button class="tab" data-tab="takes" type="button" role="tab" data-icon="sparkle">おてほん</button>
+            <button class="tab" data-tab="practice" type="button" role="tab" data-icon="target">おとあて</button>
+            <button class="tab" data-tab="tools" type="button" role="tab" data-icon="drum">
+              <ruby>道具<rt>どうぐ</rt></ruby>
             </button>
           </nav>
 
@@ -131,8 +131,8 @@
           <!-- おてほん(打鍵記録) -->
           <section class="panel" data-panel="takes" role="tabpanel">
             <div class="rec-row">
-              <button class="btn-rec" id="btn-rec-keys" type="button">
-                ● <ruby>打鍵<rt>だけん</rt></ruby>を ろくおん
+              <button class="btn-rec" id="btn-rec-keys" type="button" data-icon="record">
+                <ruby>打鍵<rt>だけん</rt></ruby>を ろくおん
               </button>
               <span class="rec-status" id="rec-status"></span>
             </div>
@@ -144,17 +144,17 @@
               シーク・くりかえし・そくどに ついてきます。
             </p>
             <div class="toggle-row">
-              <label class="toggle"><input type="checkbox" id="chk-take-sound" checked /> <span>🔊 音を出す</span></label>
-              <label class="toggle"><input type="checkbox" id="chk-take-light" checked /> <span>💡 けんばんを 光らせる</span></label>
-              <label class="toggle"><input type="checkbox" id="chk-doremi" checked /> <span>🎵 ドレミを 出す</span></label>
+              <label class="toggle"><input type="checkbox" id="chk-take-sound" checked /> <span data-icon="speaker">音を出す</span></label>
+              <label class="toggle"><input type="checkbox" id="chk-take-light" checked /> <span data-icon="bulb">けんばんを 光らせる</span></label>
+              <label class="toggle"><input type="checkbox" id="chk-doremi" checked /> <span data-icon="note">ドレミを 出す</span></label>
             </div>
             <ul class="take-list" id="take-list"></ul>
 
             <h2 class="panel-title">
-              🎤 <ruby>音声<rt>おんせい</rt></ruby>の ろくおんメモ
+              <ruby>音声<rt>おんせい</rt></ruby>の ろくおんメモ
             </h2>
             <div class="rec-row" id="memo-row">
-              <button class="btn-rec" id="btn-rec-audio" type="button">● マイクで ろくおん</button>
+              <button class="btn-rec" id="btn-rec-audio" type="button" data-icon="record">マイクで ろくおん</button>
               <span class="rec-status" id="memo-status"></span>
             </div>
             <p class="hint" id="memo-hint">
@@ -182,17 +182,17 @@
                    光は位置を教えるだけで音名を覚えないので、いちばん やさしい段としてだけ置く。 -->
               <div class="setting-row" role="group" aria-label="問題の出し方">
                 <span class="label"><ruby>問題<rt>もんだい</rt></ruby></span>
-                <button class="ctl mode-btn" data-mode="light" type="button">
-                  💡<span class="ctl-label"><ruby>光<rt>ひか</rt></ruby>る</span>
+                <button class="ctl mode-btn" data-mode="light" type="button" data-icon="bulb">
+                  <span class="ctl-label"><ruby>光<rt>ひか</rt></ruby>る</span>
                 </button>
-                <button class="ctl mode-btn is-on" data-mode="letter" type="button">
-                  🔤<span class="ctl-label"><ruby>文字<rt>もじ</rt></ruby></span>
+                <button class="ctl mode-btn is-on" data-mode="letter" type="button" data-icon="letter">
+                  <span class="ctl-label"><ruby>文字<rt>もじ</rt></ruby></span>
                 </button>
-                <button class="ctl mode-btn" data-mode="sound" type="button">
-                  👂<span class="ctl-label"><ruby>音<rt>おと</rt></ruby></span>
+                <button class="ctl mode-btn" data-mode="sound" type="button" data-icon="ear">
+                  <span class="ctl-label"><ruby>音<rt>おと</rt></ruby></span>
                 </button>
-                <button class="ctl mode-btn" data-mode="staff" type="button">
-                  🎼<span class="ctl-label"><ruby>音符<rt>おんぷ</rt></ruby></span>
+                <button class="ctl mode-btn" data-mode="staff" type="button" data-icon="staff">
+                  <span class="ctl-label"><ruby>音符<rt>おんぷ</rt></ruby></span>
                 </button>
               </div>
               <p class="hint" id="mode-hint"></p>
@@ -200,11 +200,11 @@
               <!-- 間違えたら終わりにするか。脳トレの「1 問でも間違えたら終わり」と同じ。 -->
               <div class="setting-row" role="group" aria-label="やり方">
                 <span class="label">やり<ruby>方<rt>かた</rt></ruby></span>
-                <button class="ctl rule-btn is-on" data-survival="0" type="button">
-                  ♾<span class="ctl-label">ずっと</span>
+                <button class="ctl rule-btn is-on" data-survival="0" type="button" data-icon="infinity">
+                  <span class="ctl-label">ずっと</span>
                 </button>
-                <button class="ctl rule-btn" data-survival="1" type="button">
-                  💥<span class="ctl-label"
+                <button class="ctl rule-btn" data-survival="1" type="button" data-icon="burst">
+                  <span class="ctl-label"
                     >1つでも<ruby>間違<rt>まちが</rt></ruby>えたら<ruby>終<rt>お</rt></ruby>わり</span
                   >
                 </button>
@@ -252,8 +252,8 @@
                 <div class="practice-stats" id="practice-stats"></div>
                 <div class="practice-foot-sub">
                   <span id="practice-best"></span>
-                  <button class="ctl" id="btn-practice-retry" type="button" hidden>
-                    ↺<span class="ctl-label">もう<ruby>一度<rt>いちど</rt></ruby></span>
+                  <button class="ctl" id="btn-practice-retry" type="button" hidden data-icon="undo">
+                    <span class="ctl-label">もう<ruby>一度<rt>いちど</rt></ruby></span>
                   </button>
                 </div>
                 <button class="btn-quit" id="btn-practice-quit" type="button">
@@ -265,17 +265,17 @@
 
           <!-- 道具(メトロノーム) -->
           <section class="panel" data-panel="tools" role="tabpanel">
-            <h2 class="panel-title">🥁 メトロノーム</h2>
+            <h2 class="panel-title" data-icon="drum">メトロノーム</h2>
             <div class="metro-row">
-              <button class="ctl big" id="btn-metro" type="button">▶<small>スタート</small></button>
+              <button class="ctl big" id="btn-metro" type="button" data-icon="play"><small>スタート</small></button>
               <div class="metro-lamps" id="metro-lamps"></div>
             </div>
             <div class="metro-row">
               <button class="ctl" id="btn-bpm-down" type="button">−</button>
               <span class="bpm" id="bpm-label">100</span>
               <button class="ctl" id="btn-bpm-up" type="button">＋</button>
-              <button class="ctl" id="btn-tap" type="button">
-                👆<small>タップ</small>
+              <button class="ctl" id="btn-tap" type="button" data-icon="tap">
+                <small>タップ</small>
               </button>
             </div>
             <input class="bpm-slider" id="bpm-slider" type="range" min="30" max="240" value="100" aria-label="BPM" />
@@ -286,11 +286,11 @@
               <button class="ctl beats" data-beats="2" type="button">2</button>
             </div>
 
-            <h2 class="panel-title">🔈 <ruby>音量<rt>おんりょう</rt></ruby></h2>
+            <h2 class="panel-title" data-icon="speaker"><ruby>音量<rt>おんりょう</rt></ruby></h2>
             <input class="bpm-slider" id="volume" type="range" min="0" max="100" value="70" aria-label="音量" />
 
-            <h2 class="panel-title">
-              🎹 <ruby>鍵盤<rt>けんばん</rt></ruby>
+            <h2 class="panel-title" data-icon="keyboard">
+              <ruby>鍵盤<rt>けんばん</rt></ruby>
             </h2>
             <div class="metro-row">
               <span class="label"><ruby>広<rt>ひろ</rt></ruby>さ</span>
@@ -308,7 +308,7 @@
       <!-- 流れるドレミ。お手本を再生している間だけ出す。 -->
       <div class="doremi" id="doremi" hidden>
         <div class="doremi-track" id="doremi-track"></div>
-        <button class="doremi-print" id="btn-print" type="button">🖨 <ruby>印刷<rt>いんさつ</rt></ruby></button>
+        <button class="doremi-print" id="btn-print" type="button" data-icon="print"><ruby>印刷<rt>いんさつ</rt></ruby></button>
       </div>
 
       <div class="keys-area">
@@ -319,9 +319,9 @@
                この hidden を外せば元に戻る。 -->
           <span class="ctl-group" id="instrument-group" role="group" aria-label="楽器" hidden></span>
           <span class="ctl-group">
-            <button class="ctl" id="btn-oct-down" type="button">◀<small>ひくく</small></button>
+            <button class="ctl" id="btn-oct-down" type="button" data-icon="left"><small>ひくく</small></button>
             <span class="oct-label" id="oct-label">C4</span>
-            <button class="ctl" id="btn-oct-up" type="button">▶<small>たかく</small></button>
+            <button class="ctl" id="btn-oct-up" type="button" data-icon="right"><small>たかく</small></button>
           </span>
         </div>
         <div class="keyboard" id="keyboard"></div>

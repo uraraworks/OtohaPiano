@@ -70,6 +70,11 @@ body {
   margin: 0;
   height: 100%;
   overscroll-behavior: none;
+  /* この画面は明るい配色で作ってある。宣言しておかないと、端末が
+     ダークモードのときにブラウザ既定の部品(スライダーの溝・チェックボックス・
+     入力欄・スクロールバー)だけが暗く描かれる。実際にスライダーの溝が
+     真っ黒になった。 */
+  color-scheme: light;
 }
 
 body {
@@ -309,6 +314,78 @@ ruby rt {
   line-height: 1.1;
 }
 
+/* ---- アイコン ------------------------------------------------------------ */
+
+/* 自前の SVG(src/ui/icons.ts)。絵文字と違い、端末が変わっても同じ絵が出る。
+   線は currentColor ではなく固定の濃い色にしてあるので、
+   選んでいるボタン(地が琥珀)の上でもそのまま読める。 */
+.icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: block;
+}
+
+/* 文字と横に並べるところは、文字の高さに合わせて少し小さくする。 */
+.tab .icon,
+.panel-title .icon,
+.toggle span .icon,
+.btn-rec .icon,
+.doremi-print .icon,
+.mark .icon,
+.loop-status .icon,
+.icon-btn .icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: -0.35em;
+}
+
+.tab,
+.panel-title,
+.btn-rec,
+.doremi-print {
+  /* アイコンと文字の間を空ける。 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.panel-title {
+  justify-content: flex-start;
+}
+
+.toggle span .icon,
+.loop-status .icon,
+.mark .icon {
+  /* 文中に混ぜるものは flex にせず、文字として流す。 */
+  vertical-align: -0.3em;
+}
+
+.icon-btn .icon {
+  margin: 0 auto;
+}
+
+/* 合否の印は文字ではなく図形。おだいと同じ大きさまで引き伸ばす。 */
+.judge .icon {
+  width: clamp(3.5rem, 16vh, 9rem);
+  height: clamp(3.5rem, 16vh, 9rem);
+}
+
+.judge.is-ok .icon {
+  width: clamp(4.5rem, 22vh, 13rem);
+  height: clamp(4.5rem, 22vh, 13rem);
+}
+
+/* 向きのヒントは文の中に出るので、文字に合わせる。 */
+.judge small .icon {
+  width: 1.4em;
+  height: 1.4em;
+  display: inline-block;
+  vertical-align: -0.4em;
+}
+
 .ctl small {
   font-size: 0.62rem;
   color: var(--fg-dim);
@@ -363,7 +440,6 @@ ruby rt {
   flex: 1 1 auto;
   min-width: 0;
   height: 28px;
-  accent-color: var(--accent);
 }
 
 .time {
@@ -1041,9 +1117,58 @@ ruby rt {
   text-align: center;
 }
 
+/* つまみと溝を自前で描く。
+   accent-color だけに任せると、Chrome が溝の色を「つまみと対比する色」として
+   自動で決めてしまい、端末がダークモードのとき溝が真っ黒になる
+   (color-scheme: light を宣言しても直らなかった)。 */
+.seek,
+.bpm-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.seek::-webkit-slider-runnable-track,
+.bpm-slider::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+}
+
+.seek::-moz-range-track,
+.bpm-slider::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+}
+
+/* つまみは指でつかむので大きめに。 */
+.seek::-webkit-slider-thumb,
+.bpm-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--accent-shadow);
+}
+
+.seek::-moz-range-thumb,
+.bpm-slider::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--accent-shadow);
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 .bpm-slider {
   width: 100%;
-  accent-color: var(--accent);
   height: 32px;
 }
 
