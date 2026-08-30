@@ -1156,9 +1156,25 @@ function playCurrentPrompt(): void {
   window.setTimeout(() => {
     for (const midi of notes) synth.noteOff(midi);
   }, DRILL_NOTE_MS);
+  bouncePromptNote();
 }
 
-$("btn-replay").addEventListener("click", () => playCurrentPrompt());
+/**
+ * 鳴った瞬間にキャラを跳ねさせる。音だけだと画面に何も起きず、
+ * 鳴ったことに気付けないため。
+ * 同じ音が続いても毎回跳ねるよう、クラスを付け直す前に一度アニメを切る。
+ */
+function bouncePromptNote(): void {
+  const el = $("prompt-note");
+  el.classList.remove("is-poyon");
+  // 付け直しただけでは再生されない。ここで一度レイアウトを読ませて区切る。
+  void el.offsetWidth;
+  el.classList.add("is-poyon");
+}
+
+// 押すともう一度鳴る。まちがえ扱いにせず聞き直せるようにするため
+// (鍵盤で当てずっぽうに押すしか聞き直す手が無いのは、数え方として不当)。
+$("prompt-note").addEventListener("click", () => playCurrentPrompt());
 
 function perMinute(): number {
   const minutes = (performance.now() - stats.startedAt) / 60000;

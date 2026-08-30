@@ -204,8 +204,19 @@
                    目を動かさずに読めるようにする。 -->
               <div class="question-body">
                 <div class="prompt-strip" id="prompt-strip" hidden></div>
+                <!-- 音のおだいは目に映るものが無いので、鳴った瞬間にキャラを跳ねさせる。
+                     どの音でも同じ絵にする(絵が変わると、それが答えの手がかりになってしまう)。
+                     押すともう一度鳴る。まちがえ扱いにせず聞き直せるようにするため。 -->
                 <div class="prompt-sound" id="prompt-sound" hidden>
-                  <button class="ctl big" id="btn-replay" type="button">🔊<small>もういちど</small></button>
+                  <img
+                    class="prompt-note"
+                    id="prompt-note"
+                    src="./icon/otoha-192.png"
+                    alt="もう一度 音を鳴らす"
+                    draggable="false"
+                    width="192"
+                    height="192"
+                  />
                 </div>
                 <div class="prompt-staff" id="prompt-staff" hidden></div>
                 <div class="judge" id="judge" hidden aria-live="polite"></div>
