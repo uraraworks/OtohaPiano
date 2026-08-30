@@ -7,9 +7,9 @@
   "author": "URARA-works",
   "repository": {
     "type": "git",
-    "url": "https://github.com/uraraworks/OtohPiano.git"
+    "url": "https://github.com/uraraworks/OtohaPiano.git"
   },
-  "homepage": "https://uraraworks.github.io/OtohPiano/",
+  "homepage": "https://uraraworks.github.io/OtohaPiano/",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5210 --strictPort",

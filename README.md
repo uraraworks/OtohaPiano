@@ -12,8 +12,8 @@
 インストール不要・サーバー不要・API キー不要。動画のブックマークも練習の記録も、
 すべて端末の中だけに保存されます。
 
-- 公開先：https://uraraworks.github.io/OtohPiano/
-- 紹介ページ：https://uraraworks.github.io/OtohPiano/intro.html （`public/intro.html`）
+- 公開先：https://uraraworks.github.io/OtohaPiano/
+- 紹介ページ：https://uraraworks.github.io/OtohaPiano/intro.html （`public/intro.html`）
 - 実装メモ・設計判断：[docs/v0-notes.md](docs/v0-notes.md)
 
 **制作途中のプロトタイプ（v0）です。** 仕様も見た目も、まだ変わります。
@@ -119,8 +119,8 @@ test/        単体テスト
 
 ## 公開の手順
 
-1. GitHub に `uraraworks/OtohPiano` を作る（public）
-2. `git remote add origin https://github.com/uraraworks/OtohPiano.git` して push
+1. GitHub に `uraraworks/OtohaPiano` を作る（public）
+2. `git remote add origin https://github.com/uraraworks/OtohaPiano.git` して push
 3. リポジトリの Settings → Pages で Source を **GitHub Actions** にする
 
 `master` / `main` への push で `.github/workflows/deploy.yml` が typecheck → test → build を
