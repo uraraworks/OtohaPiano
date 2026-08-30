@@ -646,27 +646,28 @@ ruby rt {
   max-width: 100%;
 }
 
-/* 合否の印。おだいと同じ場所・同じ大きさで出す。 */
+/* 合否の印。おだいと同じ場所に、思い切り大きく出す。
+   ◎ も ✗ も赤にしてある(答案に赤で丸を付けるのと同じ)。
+   形が違うので色で分ける必要はなく、色を変えないぶん大きさに振れる。 */
 .judge {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: clamp(2.5rem, 11vh, 6rem);
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.judge.is-ok {
-  color: var(--accent-text);
-}
-
-.judge.is-ng {
+  gap: 2px;
   color: var(--danger);
+  font-size: clamp(3.5rem, 16vh, 9rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 正解はいちばん大きく。当たったことが離れて見ても分かるように。 */
+.judge.is-ok {
+  font-size: clamp(4.5rem, 22vh, 13rem);
 }
 
 .judge small {
+  /* 印の大きさに引きずられないよう、脇の文字は別に決める。 */
   font-size: clamp(0.9rem, 2.6vh, 1.4rem);
   font-weight: 700;
   color: var(--fg);
