@@ -17,22 +17,29 @@ describe("パソコンのキーの対応", () => {
   });
 
   it("上の段はすべて黒鍵", () => {
-    const row = ["KeyW", "KeyE", "KeyT", "KeyY", "KeyU", "KeyO", "KeyP", "BracketRight"];
+    const row = ["KeyW", "KeyE", "KeyT", "KeyY", "KeyU", "KeyO", "KeyP", "BracketLeft", "BracketRight"];
     for (const code of row) expect(isBlackKey(midiForKey(code, C4)!)).toBe(true);
   });
 
   it("黒鍵の無いところ（ミとファの間・シとドの間）は割り当てない", () => {
-    // R・I・@ を飛ばしてあるので、上の段の並びが鍵盤の見た目と重なる。
+    // R と I を飛ばしてあるので、上の段の並びが鍵盤の見た目と重なる。
     expect(midiForKey("KeyR", C4)).toBeNull();
     expect(midiForKey("KeyI", C4)).toBeNull();
-    expect(midiForKey("BracketLeft", C4)).toBeNull(); // JIS の「@」
   });
 
-  it("JIS の刻印どおりに鳴る（] が ソ、[ が ファ♯）", () => {
+  it("JIS の刻印どおりに鳴る", () => {
     // JIS では code と刻印の対応が US とずれる。ここを取り違えると
     // 「] が鳴らず、[ がソになる」ことになる（実際になった）。
-    expect(noteNameJa(midiForKey("Backslash", C4)!)).toBe("ソ"); // JIS の「]」
-    expect(noteNameJa(midiForKey("BracketRight", C4)!)).toBe("ファ♯"); // JIS の「[」
+    expect(noteNameJa(midiForKey("Backslash", C4)!)).toBe("ソ"); // 」
+    expect(noteNameJa(midiForKey("BracketLeft", C4)!)).toBe("ファ♯"); // @
+    expect(noteNameJa(midiForKey("BracketRight", C4)!)).toBe("ソ♯"); // [
+  });
+
+  it("右端の @ と [ は、はさむ白鍵の間の黒鍵になっている", () => {
+    // @ は ファ(:) と ソ(]) の間、[ は ソ(]) の上。
+    expect(midiForKey("BracketLeft", C4)).toBe(midiForKey("Quote", C4)! + 1);
+    expect(midiForKey("BracketLeft", C4)).toBe(midiForKey("Backslash", C4)! - 1);
+    expect(midiForKey("BracketRight", C4)).toBe(midiForKey("Backslash", C4)! + 1);
   });
 
   it("鍵盤の左端を動かすと、鳴る音も一緒に動く", () => {
@@ -46,8 +53,8 @@ describe("パソコンのキーの対応", () => {
     expect(midiForKey("Enter", C4)).toBeNull();
   });
 
-  it("白鍵 12 個と黒鍵 8 個", () => {
-    expect(mappedKeyCount()).toBe(20);
+  it("白鍵 12 個と黒鍵 9 個", () => {
+    expect(mappedKeyCount()).toBe(21);
   });
 });
 
