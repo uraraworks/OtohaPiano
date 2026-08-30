@@ -66,6 +66,8 @@
 ## 残っていること
 
 - 実機（iPad / Android タブレット）でのマルチタッチ・マイク録音の確認
+- **リポジトリの作成と push、Pages の有効化。** 手順は README の「公開の手順」に書いた。
+  ワークフロー（`.github/workflows/deploy.yml`）は配置済み。
 - **全画面ボタンの実動作の確認。** 開発に使ったプレビューペインは全画面そのものを拒否する
   （`requestFullscreen` が `TypeError: Permissions check failed`。`fullscreenEnabled` は true を
   返すのでボタンは出る）。ボタンの表示・配線・失敗時に握り潰すところまでは確認済みだが、

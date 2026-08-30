@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>おとは — YouTube を見ながら弾く、ブラウザで開くだけのピアノ</title>
+<meta name="description" content="YouTube のお手本を見ながら弾けるブラウザのピアノ。インストール不要・サーバー不要・記録はすべて端末内。制作途中のプロトタイプです。" />
+<link rel="icon" href="./icon/otoha-192.png" />
+<style>
+  :root{
+    --ink:#443a5e; --paper:#ffffff; --ground:#f6f1fb;
+    --sub:#6b5f88; --line:#ddd2ee;
+    --amber:#ffc247; --plum:#8f7ac4; --sky:#57b8e8; --rose:#e08bb0;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    line-height:1.85; font-size:16px;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 20px 80px}
+  a{color:inherit}
+
+  /* 制作途中であることを最初に告げる */
+  .flag{
+    background:var(--amber); color:#5a3c00; text-align:center;
+    padding:10px 16px; font-size:14px; font-weight:700; letter-spacing:.02em;
+  }
+
+  header{text-align:center; padding:56px 0 40px}
+  header img{width:112px; height:112px; display:block; margin:0 auto 18px}
+  h1{font-size:40px; margin:0 0 6px; letter-spacing:.12em}
+  .tagline{font-size:17px; color:var(--sub); margin:0}
+
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:32px 0 0}
+  .btn{
+    display:inline-block; padding:14px 28px; border-radius:14px; text-decoration:none;
+    font-weight:700; border:2px solid var(--ink);
+  }
+  .btn-main{background:var(--ink); color:var(--paper)}
+  .btn-sub{background:transparent; color:var(--ink)}
+
+  section{
+    background:var(--paper); border:1px solid var(--line); border-radius:18px;
+    padding:28px 26px; margin:20px 0;
+  }
+  h2{font-size:20px; margin:0 0 14px; letter-spacing:.04em}
+  h2::before{
+    content:""; display:inline-block; width:10px; height:10px; border-radius:3px;
+    background:var(--plum); margin-right:10px; vertical-align:middle;
+  }
+  section:nth-of-type(2) h2::before{background:var(--sky)}
+  section:nth-of-type(3) h2::before{background:var(--amber)}
+  section:nth-of-type(4) h2::before{background:var(--rose)}
+  section:nth-of-type(5) h2::before{background:var(--plum)}
+  section:nth-of-type(6) h2::before{background:var(--sky)}
+  section:nth-of-type(7) h2::before{background:var(--amber)}
+  p{margin:0 0 14px}
+  p:last-child{margin-bottom:0}
+  ul,ol{margin:0; padding-left:1.2em}
+  li{margin-bottom:8px}
+  li:last-child{margin-bottom:0}
+  strong{font-weight:700}
+
+  .table-scroll{overflow-x:auto}
+  table{border-collapse:collapse; width:100%; min-width:460px; font-size:15px}
+  th,td{text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid var(--line)}
+  tr:last-child th,tr:last-child td{border-bottom:none}
+  th{white-space:nowrap; width:8em; font-weight:700}
+
+  .note{font-size:14px; color:var(--sub)}
+  footer{text-align:center; color:var(--sub); font-size:14px; padding:8px 0 0}
+  footer a{text-decoration:underline}
+  @media (max-width:520px){
+    h1{font-size:32px}
+    header{padding:40px 0 28px}
+    section{padding:22px 18px}
+    /* 狭い画面では表を横スクロールさせず、見出しと中身を縦に積む。
+       紹介ページを読むのに横へ振る操作を要求しない。 */
+    table{min-width:0}
+    tr{display:block; padding:10px 0; border-bottom:1px solid var(--line)}
+    tr:last-child{border-bottom:none}
+    th,td{display:block; width:auto; padding:0; border:none}
+    th{margin-bottom:2px; color:var(--sub); font-size:13px; letter-spacing:.06em}
+  }
+</style>
+</head>
+<body>
+
+<div class="flag">制作途中のプロトタイプです（v0）。仕様も見た目も、まだ変わります。</div>
+
+<div class="wrap">
+
+<header>
+  <img src="./icon/otoha-512.png" alt="" />
+  <h1>おとは</h1>
+  <p class="tagline">YouTube を見ながら弾く、ブラウザで開くだけのピアノ。</p>
+  <div class="cta">
+    <a class="btn btn-main" href="./">さわってみる</a>
+    <a class="btn btn-sub" href="https://github.com/uraraworks/OtohPiano">GitHub</a>
+  </div>
+</header>
+
+<section>
+  <h2>これは何か</h2>
+  <p>
+    子どもが好きな曲の動画を流しながら、その場で鍵盤を叩いて練習する
+    ——おもちゃのピアノと YouTube を並べてやっていることを、
+    <strong>タブレット 1 枚の中でやれるようにした</strong>ものです。
+  </p>
+  <p>
+    ブラウザで開けばすぐ弾けます。インストールもアカウントも要りません。
+    ピアノを始めたばかりの子どもが中心ですが、大人の初心者にも同じように使えます。
+  </p>
+  <p class="note">
+    名前の「おとは」は漢字で「音羽」。アイコンの羽つき音符がその子です。
+    姉妹作に、ブラウザで開くだけのペイント
+    <a href="https://uraraworks.github.io/IrohaPaint/">いろは</a> があります。
+  </p>
+</section>
+
+<section>
+  <h2>どう使うか</h2>
+  <p>最初の一度だけ、大人が曲を登録します。</p>
+  <ol>
+    <li>YouTube アプリで練習したい曲を開き、「共有」から URL をコピーする</li>
+    <li>おとはを開いて、「曲」の欄に貼りつけて「追加」を押す</li>
+  </ol>
+  <p>
+    あとは子どもがサムネイルを押すだけです。動画が再生され、画面の下の鍵盤で弾けます。
+    <strong>検索の窓はあえて置いていません。</strong>
+    子どもが別の動画へ迷い込む入口を作らないためです。
+  </p>
+  <p class="note">
+    共有 URL に「ここから再生」の時間が入っていれば、登録したときに一緒に覚えます。
+  </p>
+</section>
+
+<section>
+  <h2>いまできること</h2>
+  <div class="table-scroll">
+  <table>
+    <tr><th>見ながら弾く</th><td>YouTube の動画を出したまま、画面の下の鍵盤で弾けます。ピアノ・エレクトーン・オルゴール・ストリングスの 4 つの音。指を何本置いても鳴るので、和音も連打もできます</td></tr>
+    <tr><th>ゆっくりにする</th><td>🐢 0.5／🚶 0.75／🏃 1.0 の 3 段階。遅くしても音の高さは変わらないので、そのまま鍵盤で合わせられます</td></tr>
+    <tr><th>くりかえす</th><td>「A（ここから）」「B（ここまで）」を押すと、その間だけを何度も繰り返します。難しい 4 小節だけを回し続けられます</td></tr>
+    <tr><th>ここを おぼえる</th><td>練習を始めたい位置を、曲ごとに何個でも記録できます。次に開いたときも残っています</td></tr>
+    <tr><th>光る けんばん</th><td>弾ける人がこの鍵盤で一度弾いておくと、押した鍵とタイミングが記録され、あとから<strong>音が鳴って鍵盤が光る</strong>お手本になります。動画を流しながら録れば、巻き戻しても繰り返しても遅くしても、お手本がぴたりと付いてきます</td></tr>
+    <tr><th>ろくおんメモ</th><td>マイクで録音できます。本物のピアノ・先生・お友達の演奏など、アプリの外の音を残して何度でも聴けます</td></tr>
+    <tr><th>ドレミ</th><td>お手本から音名の並びを作り、再生に合わせてカラオケの字幕のように光らせます。紙に印刷もできます</td></tr>
+    <tr><th>メトロノーム</th><td>速さは 30〜240、拍子は 2／3／4。テンポが分からないときは、曲に合わせて 4 回叩けば速さを測ってくれます</td></tr>
+  </table>
+  </div>
+  <p class="note">
+    文字には ふりがな を振ってあります。言葉づかいは大人向けのまま（録音・再生・繰り返し）にして、
+    代わりに絵文字を添えました。大人・小学生・幼児を 1 つの画面でまかなうためです。
+  </p>
+</section>
+
+<section>
+  <h2>考えていること</h2>
+  <p>
+    「曲の音を解析して、自動で楽譜にする」ことは<strong>あえてやっていません。</strong>
+    技術としては可能ですが、バンドの曲では楽器を区別できず、
+    ピアノ以外の音が混ざった当てにならないお手本ができあがります。
+  </p>
+  <p>
+    代わりに選んだのが「<strong>人が弾いたものを記録する</strong>」やり方です。
+    誰かが一度弾けば、それは推測ではなく事実なので、音は必ず合っています。
+    ドレミの表示が正確なのも、この選択の副産物です。
+  </p>
+</section>
+
+<section>
+  <h2>まだできないこと</h2>
+  <ul>
+    <li>五線譜での表示（いまはドレミの並びだけです）</li>
+    <li>曲の音から自動でお手本を作ること（上に書いた理由で、当面やりません）</li>
+    <li>アプリ内での曲の検索（YouTube アプリの共有から貼ってください）</li>
+    <li>繰り返すたびに少しずつ速くしていく練習モード</li>
+    <li>端末どうしでの記録の共有（記録は端末の中だけにあります）</li>
+  </ul>
+  <p class="note">iPhone では全画面ボタンが出ません。iPhone の Safari が動画以外の全画面に対応していないためです（iPad・Android・パソコンでは出ます）。</p>
+</section>
+
+<section>
+  <h2>記録は端末の中だけ</h2>
+  <p>
+    登録した曲・練習の位置・お手本・録音は、すべて<strong>その端末のブラウザの中</strong>に
+    保存されます。こちらには送られませんし、置いておくサーバーもありません。
+    アカウントも要りません。
+  </p>
+  <p>
+    動画の再生には YouTube の公式プレイヤーをそのまま埋め込んでいます。
+    再生中は YouTube に接続するので、通信や表示のきまりは YouTube のものに従います。
+  </p>
+  <p class="note">
+    ブラウザの履歴やサイトデータを消すと、記録も一緒に消えます。
+    録音した音は端末の中で少しずつ場所を取るので、要らなくなったものは消してください。
+  </p>
+</section>
+
+<section>
+  <h2>作っている人へ</h2>
+  <p>
+    プロトタイプ（v0）です。仕様も見た目も、これから変わります。
+    作りは静的なページだけで、サーバーも API キーも使っていません。
+  </p>
+  <p>
+    ソースは <a href="https://github.com/uraraworks/OtohPiano">GitHub</a> にあります（MIT ライセンス）。
+    実装で決めたことは <a href="https://github.com/uraraworks/OtohPiano/blob/master/docs/v0-notes.md">docs/v0-notes.md</a> に残してあります。
+  </p>
+</section>
+
+<footer>
+  <p>© 2026 URARA-works ／ <a href="./">おとはを開く</a></p>
+</footer>
+
+</div>
+</body>
+</html>

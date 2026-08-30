@@ -12,6 +12,41 @@
 インストール不要・サーバー不要・API キー不要。動画のブックマークも練習の記録も、
 すべて端末の中だけに保存されます。
 
+- 公開先：https://uraraworks.github.io/OtohPiano/
+- 紹介ページ：https://uraraworks.github.io/OtohPiano/intro.html （`public/intro.html`）
+- 実装メモ・設計判断：[docs/v0-notes.md](docs/v0-notes.md)
+
+**制作途中のプロトタイプ（v0）です。** 仕様も見た目も、まだ変わります。
+
+## はじめかた
+
+最初の一度だけ、大人が曲を登録します。
+
+1. YouTube アプリで練習したい曲を開き、「共有」から URL をコピーする
+2. おとはを開いて「曲」の欄に貼りつけ、「追加」を押す
+
+あとは子どもがサムネイルを押すだけです。動画が再生され、画面の下の鍵盤で弾けます。
+**検索の窓はあえて置いていません**（子どもが別の動画へ迷い込む入口を作らないため）。
+
+共有 URL に `&t=90s` のような開始位置が入っていれば、登録時に「ここから練習」として
+一緒に覚えます。
+
+## 記録の置き場所とプライバシー
+
+登録した曲・練習の位置・お手本・録音は、すべてその端末のブラウザの中に保存されます
+（小さい JSON は localStorage、録音の音声データは IndexedDB）。**どこにも送信されません。**
+このアプリにサーバーは存在せず、アカウントもありません。
+
+外部へ出る通信は、動画の再生に使う YouTube の公式プレイヤー（IFrame Player API）と、
+サムネイル（`img.youtube.com`）・タイトル（oEmbed）の取得だけです。いずれも API キーは
+不要で、こちらから利用者の情報を渡すことはありません。再生中の通信と表示のきまりは
+YouTube のものに従います。
+
+マイクは録音ボタンを押したときにだけ使い、録音を止めた時点で必ず解放します
+（マイク使用中の表示を残さないため）。マイクの無い端末では録音ボタンごと出しません。
+
+ブラウザの履歴・サイトデータを消すと記録も消えます。
+
 ## 使い方（開発）
 
 ```bash
@@ -82,6 +117,21 @@ src/main.ts  画面の組み立てと配線
 test/        単体テスト
 ```
 
+## 公開の手順
+
+1. GitHub に `uraraworks/OtohPiano` を作る（public）
+2. `git remote add origin https://github.com/uraraworks/OtohPiano.git` して push
+3. リポジトリの Settings → Pages で Source を **GitHub Actions** にする
+
+`master` / `main` への push で `.github/workflows/deploy.yml` が typecheck → test → build を
+通してから Pages へ配置します。`base: "./"` なのでリポジトリ名を後から変えても
+配置先パスを直す必要はありません。
+
 ## ライセンス
 
-MIT（[LICENSE](LICENSE)）。アイコン画像は URARA-works の著作物です。
+MIT（[LICENSE](LICENSE)）。学校・先生・他の開発者がためらわずに使えることを優先しました。
+姉妹作の[いろは](https://github.com/uraraworks/IrohaPaint)と同じ判断です。
+
+アイコン画像（`public/icon/`）は URARA-works の著作物です。
+このアプリは YouTube の公式プレイヤーを埋め込んで再生するだけで、動画そのものを
+複製・保存・再配布しません。再生される動画の権利はそれぞれの権利者に帰属します。
