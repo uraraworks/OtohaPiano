@@ -171,8 +171,16 @@
               <button class="ctl mode-btn" data-mode="light" type="button">💡<small>ひかる</small></button>
               <button class="ctl mode-btn is-on" data-mode="letter" type="button">🔤<small>もじ</small></button>
               <button class="ctl mode-btn" data-mode="sound" type="button">👂<small>おと</small></button>
+              <button class="ctl mode-btn" data-mode="staff" type="button">🎼<small>おんぷ</small></button>
             </div>
             <p class="hint" id="mode-hint"></p>
+
+            <!-- 間違えたら終わりにするか。脳トレの「1 問でも間違えたら終わり」と同じ。 -->
+            <div class="metro-row" role="group" aria-label="やりかた">
+              <span class="label">やりかた</span>
+              <button class="ctl rule-btn is-on" data-survival="0" type="button">♾<small>ずっと</small></button>
+              <button class="ctl rule-btn" data-survival="1" type="button">💥<small>1つでも まちがえたら おわり</small></button>
+            </div>
 
             <div class="practice-now" id="practice-now" hidden>
               <div class="practice-head">
@@ -185,11 +193,13 @@
                 <button class="ctl big" id="btn-replay" type="button">🔊<small>もういちど</small></button>
                 <span class="prompt-sound-note">どの音か あてて、けんばんを おしてね</span>
               </div>
+              <div class="prompt-staff" id="prompt-staff" hidden></div>
 
               <div class="practice-stats" id="practice-stats"></div>
               <div class="practice-meta">
                 <span id="practice-best"></span>
                 <button class="ctl" id="btn-practice-hint" type="button">💡<small>ヒント</small></button>
+                <button class="ctl" id="btn-practice-retry" type="button" hidden>↺<small>もういちど</small></button>
               </div>
             </div>
 

@@ -546,6 +546,24 @@ ruby rt {
   color: var(--fg-faint);
 }
 
+.prompt-staff {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* 五線は currentColor で描いてあるので、地の色に合わせて 1 か所で決まる。 */
+  color: var(--fg);
+}
+
+.prompt-staff[hidden] {
+  display: none;
+}
+
+.staff-svg {
+  width: 168px;
+  height: 144px;
+  flex: 0 0 auto;
+}
+
 .prompt-sound {
   display: flex;
   align-items: center;
