@@ -16,7 +16,7 @@ const HALF = GAP / 2;
 /** いちばん下の線の y 座標。 */
 const BASE_Y = 78;
 /** 音符を置く x 座標。 */
-const NOTE_X = 96;
+const NOTE_X = 74;
 const WIDTH = 140;
 const HEIGHT = 120;
 
@@ -24,20 +24,12 @@ function yOf(step: number): number {
   return BASE_Y - step * HALF;
 }
 
-/**
- * 音部記号は「描かない」。
- *
- * 渦を計算で描くところまでやったが、どうしても記号として通用する形にならなかった。
- * 楽譜の記号は形そのものが決まりごとなので、それらしいだけの絵を載せるのは
- * 覚える相手に対して不誠実になる。代わりに、どちらの記号の五線なのかを文字で書く。
- * (Unicode の音楽記号 𝄞 は端末にフォントが無いと豆腐になるので使えず、
- *  記号用フォントの読み込みは「完全静的・外部依存なし」に反する。)
- */
-function clefLabel(clef: Clef): string {
-  const text = clef === "treble" ? "ト音記号" : "ヘ音記号";
-  return `<text x="16" y="${yOf(4)}" font-size="11" fill="currentColor" opacity="0.75"
-    dominant-baseline="middle" font-family="inherit">${text}</text>`;
-}
+// 音部記号は出さない。
+//
+// 描画は 2 度作り直しても記号として通用する形にならず、文字で「ト音記号」と
+// 書く案も試したが、五線の脇に文字が入るのは読みにくいだけだった。
+// このドリルで問うているのは音符の高さの位置であって記号の判別ではないので、
+// 出さないことにしてある。
 
 /** ♯。黒鍵のときだけ音符の前に付ける。 */
 function sharp(x: number, y: number): string {
@@ -62,11 +54,10 @@ export function renderStaff(midis: number[], baseMidi: number): string {
   for (let i = 0; i < 5; i++) {
     const y = yOf(i * 2);
     parts.push(
-      `<line x1="62" y1="${y}" x2="${WIDTH - 10}" y2="${y}" stroke="currentColor" stroke-width="1.4" opacity="0.75" />`,
+      `<line x1="14" y1="${y}" x2="${WIDTH - 10}" y2="${y}" stroke="currentColor" stroke-width="1.4" opacity="0.75" />`,
     );
   }
 
-  parts.push(clefLabel(clef));
 
   // 加線は和音のどの音にも要るぶんをまとめて 1 回だけ引く。
   const ledgers = new Set<number>();

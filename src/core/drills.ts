@@ -25,17 +25,18 @@ function deg(n: number): number {
 
 export interface RangeOption {
   id: string;
-  name: string;
-  /** 何を選んだことになるか。1 行で。 */
+  /** ボタンに出す文字。ふりがな(ruby)を含む。 */
+  label: string;
+  /** 何を選んだことになるか。1 行で。ふりがな(ruby)を含む。 */
   aim: string;
   /** 使う白鍵の数。"all" なら画面に出ている鍵盤ぶん全部。 */
   count: number | "all";
 }
 
 export const RANGE_OPTIONS: RangeOption[] = [
-  { id: "r3", name: "3つ", aim: "いちばん左から 白いけん 3つ", count: 3 },
-  { id: "r5", name: "5つ", aim: "いちばん左から 白いけん 5つ", count: 5 },
-  { id: "rall", name: "ぜんぶ", aim: "見えている 白いけん ぜんぶ", count: "all" },
+  { id: "r3", label: "3つ", aim: "<ruby>左<rt>ひだり</rt></ruby>から <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> 3つ", count: 3 },
+  { id: "r5", label: "5つ", aim: "<ruby>左<rt>ひだり</rt></ruby>から <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> 5つ", count: 5 },
+  { id: "rall", label: "<ruby>全部<rt>ぜんぶ</rt></ruby>", aim: "<ruby>見<rt>み</rt></ruby>えている <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> <ruby>全部<rt>ぜんぶ</rt></ruby>", count: "all" },
 ];
 
 /** 同時に鳴らす音の上限として選べる数。 */

@@ -49,7 +49,8 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T {
 let toastTimer = 0;
 function toast(message: string): void {
   const el = $("toast");
-  el.textContent = message;
+  // 文言はすべてこのファイル内で組み立てたもの。ふりがな(ruby)を出すため innerHTML にする。
+  el.innerHTML = message;
   el.hidden = false;
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
@@ -894,11 +895,25 @@ window.addEventListener("pagehide", () => {
 
 type PromptMode = "light" | "letter" | "sound" | "staff";
 
+/** 説明文はふりがな付き(ruby)なので、textContent ではなく innerHTML で入れる。 */
 const MODE_HINTS: Record<PromptMode, string> = {
-  light: "けんばんが 光ります。まず ばしょに なれるための だんかいです。",
-  letter: "「ド」のように もじで 出ます。もじと けんばんが むすびつきます。",
-  sound: "音だけ 鳴ります。聞いた音が どれか わかるように なります。",
-  staff: "五線の おんぷ で 出ます。音部記号は けんばんの ばしょ に あわせて かわります。",
+  light:
+    "<ruby>鍵盤<rt>けんばん</rt></ruby>が<ruby>光<rt>ひか</rt></ruby>ります。" +
+    "まず<ruby>場所<rt>ばしょ</rt></ruby>に<ruby>慣<rt>な</rt></ruby>れるための" +
+    "<ruby>段階<rt>だんかい</rt></ruby>です。",
+  letter:
+    "「ド」のように<ruby>文字<rt>もじ</rt></ruby>で<ruby>出<rt>で</rt></ruby>ます。" +
+    "<ruby>文字<rt>もじ</rt></ruby>と<ruby>鍵盤<rt>けんばん</rt></ruby>が" +
+    "<ruby>結<rt>むす</rt></ruby>びつきます。",
+  sound:
+    "<ruby>音<rt>おと</rt></ruby>だけ<ruby>鳴<rt>な</rt></ruby>ります。" +
+    "<ruby>聞<rt>き</rt></ruby>いた<ruby>音<rt>おと</rt></ruby>が どれか" +
+    "<ruby>分<rt>わ</rt></ruby>かるように なります。",
+  staff:
+    "<ruby>五線<rt>ごせん</rt></ruby>の<ruby>音符<rt>おんぷ</rt></ruby>で" +
+    "<ruby>出<rt>で</rt></ruby>ます。<ruby>音部記号<rt>おんぶきごう</rt></ruby>は" +
+    "<ruby>鍵盤<rt>けんばん</rt></ruby>の<ruby>場所<rt>ばしょ</rt></ruby>に" +
+    "<ruby>合<rt>あ</rt></ruby>わせて<ruby>変<rt>か</rt></ruby>わります。",
 };
 
 /** 一度に作る出題の数。少なすぎると継ぎ目で表示が飛び、多すぎると文字列が長くなる。 */
@@ -938,7 +953,7 @@ function setPromptMode(mode: PromptMode): void {
   for (const b of document.querySelectorAll<HTMLElement>(".mode-btn")) {
     b.classList.toggle("is-on", b.dataset.mode === mode);
   }
-  $("mode-hint").textContent = MODE_HINTS[mode];
+  $("mode-hint").innerHTML = MODE_HINTS[mode];
   if (practice) presentStep(true);
 }
 
@@ -963,42 +978,48 @@ for (const btn of document.querySelectorAll<HTMLElement>(".rule-btn")) {
 
 /** はんい・いちどに の選択肢を描く。 */
 function renderDrillSettings(): void {
+  // 選択肢はアイコンを持たないので、文字だけを 1 つ置く
+  // (絵と同じ言葉を下に添えると、同じ文言が二重に並ぶ)。
   const rangeRow = $("range-row");
-  rangeRow.innerHTML = `<span class="label">はんい</span>`;
+  rangeRow.innerHTML = `<span class="label"><ruby>範囲<rt>はんい</rt></ruby></span>`;
   for (const range of RANGE_OPTIONS) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ctl" + (range.id === rangeOption.id ? " is-on" : "");
-    btn.innerHTML = `${range.name}<small>${range.count === "all" ? "ぜんぶ" : `${range.count}つ`}</small>`;
-    btn.addEventListener("click", () => {
-      rangeOption = range;
-      saveJson("range", range.id);
-      if (running) startDrill();
-      else renderDrillSettings();
-    });
-    rangeRow.appendChild(btn);
+    rangeRow.appendChild(
+      choiceButton(range.label, range.id === rangeOption.id, () => {
+        rangeOption = range;
+        saveJson("range", range.id);
+        renderDrillSettings();
+      }),
+    );
   }
 
   const chordRow = $("chord-row");
-  chordRow.innerHTML = `<span class="label">いちどに</span>`;
+  chordRow.innerHTML = `<span class="label"><ruby>同時<rt>どうじ</rt></ruby>に</span>`;
   for (const n of CHORD_OPTIONS) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ctl" + (n === chordMax ? " is-on" : "");
-    btn.innerHTML = `${n}<small>${n === 1 ? "たんおん" : `${n}つまで`}</small>`;
-    btn.addEventListener("click", () => {
-      chordMax = n;
-      saveJson("chordMax", n);
-      if (running) startDrill();
-      else renderDrillSettings();
-    });
-    chordRow.appendChild(btn);
+    chordRow.appendChild(
+      choiceButton(n === 1 ? "1つ" : `${n}つまで`, n === chordMax, () => {
+        chordMax = n;
+        saveJson("chordMax", n);
+        renderDrillSettings();
+      }),
+    );
   }
 
   const pool = currentPoolSize();
   const best = survival ? bestStreaks[recordKey()] : bestScores[recordKey()];
-  const bestText = best ? `　さいこう ${best}${survival ? " 音" : " 音/分"}` : "";
-  $("drill-hint").textContent = `${rangeOption.aim}（いま ${pool} つ）から、いちどに ${chordMax} つまで。${bestText}`;
+  const bestText = best ? `　<ruby>最高<rt>さいこう</rt></ruby> ${best}${survival ? " 音" : " 音/分"}` : "";
+  $("drill-hint").innerHTML =
+    `${rangeOption.aim}（いま ${pool} つ）から、` +
+    `<ruby>同時<rt>どうじ</rt></ruby>に ${chordMax} つまで。${bestText}`;
+}
+
+/** 文字だけの選択肢ボタン。 */
+function choiceButton(labelHtml: string, on: boolean, onClick: () => void): HTMLElement {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ctl" + (on ? " is-on" : "");
+  btn.innerHTML = `<span class="ctl-label">${labelHtml}</span>`;
+  btn.addEventListener("click", onClick);
+  return btn;
 }
 
 $("btn-start").addEventListener("click", () => startDrill());
@@ -1186,15 +1207,19 @@ function updateStats(): void {
   if (survival) {
     // サバイバルでは「間違えた数」に意味が無い(1 つで終わるので)。
     $("practice-stats").innerHTML =
-      `<span>つづいて <b>${stats.hits}</b> 音</span>` + `<span><b>${perMinute()}</b> 音/分</span>`;
+      `<span><ruby>続<rt>つづ</rt></ruby>いて <b>${stats.hits}</b> <ruby>音<rt>おと</rt></ruby></span>` +
+      `<span><b>${perMinute()}</b> <ruby>音<rt>おと</rt></ruby>/<ruby>分<rt>ふん</rt></ruby></span>`;
   } else {
     $("practice-stats").innerHTML =
       `<span>できた <b>${stats.hits}</b></span>` +
-      `<span>まちがえ <b>${stats.misses}</b></span>` +
-      `<span><b>${perMinute()}</b> 音/分</span>`;
+      `<span><ruby>間違<rt>まちが</rt></ruby>え <b>${stats.misses}</b></span>` +
+      `<span><b>${perMinute()}</b> <ruby>音<rt>おと</rt></ruby>/<ruby>分<rt>ふん</rt></ruby></span>`;
   }
   const best = survival ? bestStreaks[recordKey()] : bestScores[recordKey()];
-  $("practice-best").textContent = best ? `さいこう ${best}${survival ? " 音" : " 音/分"}` : "";
+  $("practice-best").innerHTML = best
+    ? `<ruby>最高<rt>さいこう</rt></ruby> ${best}` +
+      (survival ? " <ruby>音<rt>おと</rt></ruby>" : " <ruby>音<rt>おと</rt></ruby>/<ruby>分<rt>ふん</rt></ruby>")
+    : "";
 }
 
 /**
@@ -1205,7 +1230,9 @@ function updateStats(): void {
 function directionHint(pressed: number, answer: number[]): string {
   // 和音のときは、押した音にいちばん近い答えを基準にする。
   const target = answer.reduce((a, b) => (Math.abs(b - pressed) < Math.abs(a - pressed) ? b : a));
-  return pressed < target ? "もっと 高い おと ⬆" : "もっと 低い おと ⬇";
+  return pressed < target
+    ? "もっと<ruby>高<rt>たか</rt></ruby>い<ruby>音<rt>おと</rt></ruby> ⬆"
+    : "もっと<ruby>低<rt>ひく</rt></ruby>い<ruby>音<rt>おと</rt></ruby> ⬇";
 }
 
 function onPracticePress(midi: number): void {
@@ -1290,12 +1317,23 @@ function failSurvival(pressed: number, answer: number[]): void {
   practice = null;
   running = false;
   releaseHeldNotes();
-  showJudge(false, `こたえは ${labelOf(answer)}（おしたのは ${noteNameJa(pressed)}）`);
+  showJudge(
+    false,
+    `<ruby>答<rt>こた</rt></ruby>えは ${labelOf(answer)}` +
+      `（<ruby>押<rt>お</rt></ruby>したのは ${noteNameJa(pressed)}）`,
+  );
   $("question-no").textContent = "";
   $("btn-practice-retry").hidden = false;
-  $("practice-stats").innerHTML = `<span>${streak} 音 つづきました</span>`;
-  $("practice-best").textContent = isBest ? "さいこう記録！" : `さいこう ${bestStreaks[key] ?? 0} 音`;
-  toast(isBest && streak > 0 ? `さいこう記録！ ${streak} 音` : `${streak} 音 つづきました`);
+  $("practice-stats").innerHTML =
+    `<span>${streak} <ruby>音<rt>おと</rt></ruby> <ruby>続<rt>つづ</rt></ruby>きました</span>`;
+  $("practice-best").innerHTML = isBest
+    ? "<ruby>最高記録<rt>さいこうきろく</rt></ruby>！"
+    : `<ruby>最高<rt>さいこう</rt></ruby> ${bestStreaks[key] ?? 0} <ruby>音<rt>おと</rt></ruby>`;
+  toast(
+    isBest && streak > 0
+      ? `<ruby>最高記録<rt>さいこうきろく</rt></ruby>！ ${streak} <ruby>音<rt>おと</rt></ruby>`
+      : `${streak} <ruby>音<rt>おと</rt></ruby> <ruby>続<rt>つづ</rt></ruby>きました`,
+  );
   // 答えの光は少し残してから消す。
   window.setTimeout(() => {
     if (!practice) keyboard.clearGuide();
@@ -1312,10 +1350,16 @@ function reportResult(): void {
   if (!survival && stats.hits >= 20 && score > prev) {
     bestScores[key] = score;
     saveJson("best", bestScores);
-    toast(`さいこう記録！ ${score} 音/分`);
+    toast(
+      `<ruby>最高記録<rt>さいこうきろく</rt></ruby>！ ${score} ` +
+        `<ruby>音<rt>おと</rt></ruby>/<ruby>分<rt>ふん</rt></ruby>`,
+    );
     return;
   }
-  toast(`できた ${stats.hits} 音 ／ まちがえ ${stats.misses}`);
+  toast(
+    `できた ${stats.hits} <ruby>音<rt>おと</rt></ruby> ／ ` +
+      `<ruby>間違<rt>まちが</rt></ruby>え ${stats.misses}`,
+  );
 }
 
 $("btn-practice-retry").addEventListener("click", () => startDrill());

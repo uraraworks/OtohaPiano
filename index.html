@@ -25,15 +25,25 @@
     <div id="start-overlay" class="start-overlay">
       <img src="./icon/otoha-512.png" alt="" class="start-icon" width="180" height="180" />
       <h1 class="start-title">おとは</h1>
-      <p class="start-tagline">うごく がめんを 見ながら ひくピアノ</p>
-      <button id="start-button" class="start-button" type="button">はじめる</button>
-      <p class="start-note">音が出ます。音量をたしかめてね。</p>
+      <p class="start-tagline">
+        <ruby>動<rt>うご</rt></ruby>く<ruby>画面<rt>がめん</rt></ruby>を
+        <ruby>見<rt>み</rt></ruby>ながら <ruby>弾<rt>ひ</rt></ruby>くピアノ
+      </p>
+      <button id="start-button" class="start-button" type="button">
+        <ruby>始<rt>はじ</rt></ruby>める
+      </button>
+      <p class="start-note">
+        <ruby>音<rt>おと</rt></ruby>が<ruby>出<rt>で</rt></ruby>ます。
+        <ruby>音量<rt>おんりょう</rt></ruby>を<ruby>確<rt>たし</rt></ruby>かめてね。
+      </p>
     </div>
 
     <header class="app-header">
       <img class="app-icon" src="./icon/otoha-64.png" alt="" width="28" height="28" />
       <h1>おとは</h1>
-      <p class="app-tagline">見ながら ひく ピアノ</p>
+      <p class="app-tagline">
+        <ruby>見<rt>み</rt></ruby>ながら <ruby>弾<rt>ひ</rt></ruby>く ピアノ
+      </p>
       <!-- iPhone の Safari は <video> 以外の全画面 API を持たないので、
            このボタンは対応環境(Android / iPad / PC)でだけ出す。判定は main.ts 側。 -->
       <button class="app-fullscreen" id="btn-fullscreen" type="button" hidden aria-label="全画面">⛶</button>
@@ -49,7 +59,7 @@
             <!-- 縦向きでは一覧が下に回るので、「右の」のような方向を指す言い方はしない。 -->
             <p>
               <ruby>一覧<rt>いちらん</rt></ruby> から
-              <ruby>曲<rt>きょく</rt></ruby> を えらんでね
+              <ruby>曲<rt>きょく</rt></ruby> を <ruby>選<rt>えら</rt></ruby>んでね
             </p>
           </div>
 
@@ -159,33 +169,50 @@
           <section class="panel practice-panel" data-panel="practice" role="tabpanel">
             <div class="practice-settings" id="practice-settings">
               <p class="hint">
-                <ruby>出<rt>で</rt></ruby>た おだいの けんばんを おします。
-                <ruby>弾<rt>ひ</rt></ruby>きかた（<ruby>指<rt>ゆび</rt></ruby>づかい・手の かたち）は
-                あつかいません。<strong>「この音は ド」「ド は この けん」</strong>が
-                わかるように なるための れんしゅうです。
+                <ruby>出<rt>で</rt></ruby>た<ruby>問題<rt>もんだい</rt></ruby>の
+                <ruby>鍵盤<rt>けんばん</rt></ruby>を <ruby>押<rt>お</rt></ruby>します。
+                <ruby>弾<rt>ひ</rt></ruby>き<ruby>方<rt>かた</rt></ruby>（<ruby>指<rt>ゆび</rt></ruby>づかい・
+                <ruby>手<rt>て</rt></ruby>の<ruby>形<rt>かたち</rt></ruby>）は
+                <ruby>扱<rt>あつか</rt></ruby>いません。
+                <strong>「この<ruby>音<rt>おと</rt></ruby>は ド」「ド は この<ruby>鍵<rt>けん</rt></ruby>」</strong>が
+                <ruby>分<rt>わ</rt></ruby>かるように なるための<ruby>練習<rt>れんしゅう</rt></ruby>です。
               </p>
 
               <!-- おだいの出しかた。文字→鍵 と 音→鍵 のどちらも「音と音名の対応」を作る。
                    光は位置を教えるだけで音名を覚えないので、いちばん やさしい段としてだけ置く。 -->
-              <div class="setting-row" role="group" aria-label="おだいの出しかた">
-                <span class="label">おだい</span>
-                <button class="ctl mode-btn" data-mode="light" type="button">💡<small>ひかる</small></button>
-                <button class="ctl mode-btn is-on" data-mode="letter" type="button">🔤<small>もじ</small></button>
-                <button class="ctl mode-btn" data-mode="sound" type="button">👂<small>おと</small></button>
-                <button class="ctl mode-btn" data-mode="staff" type="button">🎼<small>おんぷ</small></button>
+              <div class="setting-row" role="group" aria-label="問題の出し方">
+                <span class="label"><ruby>問題<rt>もんだい</rt></ruby></span>
+                <button class="ctl mode-btn" data-mode="light" type="button">
+                  💡<span class="ctl-label"><ruby>光<rt>ひか</rt></ruby>る</span>
+                </button>
+                <button class="ctl mode-btn is-on" data-mode="letter" type="button">
+                  🔤<span class="ctl-label"><ruby>文字<rt>もじ</rt></ruby></span>
+                </button>
+                <button class="ctl mode-btn" data-mode="sound" type="button">
+                  👂<span class="ctl-label"><ruby>音<rt>おと</rt></ruby></span>
+                </button>
+                <button class="ctl mode-btn" data-mode="staff" type="button">
+                  🎼<span class="ctl-label"><ruby>音符<rt>おんぷ</rt></ruby></span>
+                </button>
               </div>
               <p class="hint" id="mode-hint"></p>
 
               <!-- 間違えたら終わりにするか。脳トレの「1 問でも間違えたら終わり」と同じ。 -->
-              <div class="setting-row" role="group" aria-label="やりかた">
-                <span class="label">やりかた</span>
-                <button class="ctl rule-btn is-on" data-survival="0" type="button">♾<small>ずっと</small></button>
-                <button class="ctl rule-btn" data-survival="1" type="button">💥<small>1つでも まちがえたら おわり</small></button>
+              <div class="setting-row" role="group" aria-label="やり方">
+                <span class="label">やり<ruby>方<rt>かた</rt></ruby></span>
+                <button class="ctl rule-btn is-on" data-survival="0" type="button">
+                  ♾<span class="ctl-label">ずっと</span>
+                </button>
+                <button class="ctl rule-btn" data-survival="1" type="button">
+                  💥<span class="ctl-label"
+                    >1つでも<ruby>間違<rt>まちが</rt></ruby>えたら<ruby>終<rt>お</rt></ruby>わり</span
+                  >
+                </button>
               </div>
 
               <!-- 難しさは 2 つの軸に分ける。混ぜると何が難しくなったのか分からなくなる。 -->
-              <div class="setting-row" id="range-row" role="group" aria-label="はんい"></div>
-              <div class="setting-row" id="chord-row" role="group" aria-label="いちどに鳴らす音の数"></div>
+              <div class="setting-row" id="range-row" role="group" aria-label="範囲"></div>
+              <div class="setting-row" id="chord-row" role="group" aria-label="同時に鳴らす音の数"></div>
               <p class="hint" id="drill-hint"></p>
             </div>
 
@@ -197,7 +224,6 @@
             <div class="practice-now" id="practice-now" hidden>
               <div class="practice-head">
                 <span class="question-no" id="question-no"></span>
-                <button class="icon-btn practice-quit" id="btn-practice-quit" type="button" aria-label="やめる">✕</button>
               </div>
 
               <!-- おだいと合否は同じ場所に出す。縦の空きいっぱいに広げて、
@@ -226,8 +252,13 @@
                 <div class="practice-stats" id="practice-stats"></div>
                 <div class="practice-foot-sub">
                   <span id="practice-best"></span>
-                  <button class="ctl" id="btn-practice-retry" type="button" hidden>↺<small>もういちど</small></button>
+                  <button class="ctl" id="btn-practice-retry" type="button" hidden>
+                    ↺<span class="ctl-label">もう<ruby>一度<rt>いちど</rt></ruby></span>
+                  </button>
                 </div>
+                <button class="btn-quit" id="btn-practice-quit" type="button">
+                  <ruby>終<rt>お</rt></ruby>わる
+                </button>
               </div>
             </div>
           </section>
