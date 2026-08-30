@@ -39,9 +39,14 @@ body {
   font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
   display: flex;
   flex-direction: column;
-  /* 指で押さえたときの青いハイライトとテキスト選択を消す(鍵盤が選択されると困る)。 */
+  /* 指で押さえたときの青いハイライトとテキスト選択を消す(鍵盤が選択されると困る)。
+     iOS Safari は接頭辞なしの user-select を見ないので -webkit- 版も要る。
+     -webkit-touch-callout は長押しで出るメニュー(コピー・翻訳・調べる)を止めるためのもので、
+     user-select だけでは消えない。鍵盤のドレミを長押しすると翻訳メニューが出た。 */
   -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
 }
 
 ruby rt {
@@ -132,10 +137,33 @@ ruby rt {
   color: var(--fg-dim);
 }
 
+.app-fullscreen {
+  margin-left: auto;
+  min-width: 40px;
+  min-height: 32px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--fg);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.app-fullscreen[hidden] {
+  display: none;
+}
+
 .app-version {
+  /* 全画面ボタンが出ない環境(iPhone)でも版表示が右端に来るよう、こちらにも auto を置く。 */
   margin-left: auto;
   font-size: 0.7rem;
   color: var(--fg-dim);
+}
+
+/* ボタンが出ている環境では、右端を押しのけるのはボタン側の役目にする。 */
+.app-fullscreen:not([hidden]) ~ .app-version {
+  margin-left: 8px;
 }
 
 /* ---- 全体レイアウト ---------------------------------------------------- */
@@ -754,7 +782,12 @@ ruby rt {
 .key-label {
   font-size: 0.8rem;
   color: #6f649a;
+  /* 指が触れるのは鍵そのものであって、この文字ではない。 */
   pointer-events: none;
+  /* body で消しているが、鍵盤は長押しされる場所なので取りこぼさないようここでも明示する。 */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .kb-no-names .key-label {

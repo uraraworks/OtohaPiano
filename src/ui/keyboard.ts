@@ -4,7 +4,7 @@
 // 「1 本の指 = 1 つの鍵」を pointerId で追いかけ、指が別の鍵へ滑ったら
 // 前の鍵を離して次の鍵を押す(グリッサンドが自然に鳴る)。
 
-import { buildKeyLayout, noteNameJa, noteNameEn, type KeyLayoutItem } from "../core/notes.ts";
+import { buildKeyLayout, noteNameJa, type KeyLayoutItem } from "../core/notes.ts";
 
 export interface KeyboardOptions {
   /** 左端の MIDI 番号(必ず C)。 */
@@ -72,8 +72,9 @@ export class Keyboard {
       el.style.left = `calc(var(--white-w) * ${k.whiteIndex})`;
       const label = document.createElement("span");
       label.className = "key-label";
-      // ド だけは英語音名も出して、オクターブの現在地が分かるようにする。
-      label.textContent = noteNameJa(k.midi) === "ド" ? noteNameEn(k.midi) : noteNameJa(k.midi);
+      // 鍵盤にはドレミだけを書く。今どのオクターブにいるかは道具バーの表示(C4 等)で分かるので、
+      // 鍵盤の上で英語音名と混ぜない。
+      label.textContent = noteNameJa(k.midi);
       el.appendChild(label);
     }
     this.keyEls.set(k.midi, el);

@@ -34,6 +34,7 @@ import {
   type MemoMeta,
 } from "./core/audioMemo.ts";
 import { newId } from "./core/storage.ts";
+import { isFullscreenSupported, isFullscreenActive, toggleFullscreen, onFullscreenChange } from "./core/fullscreen.ts";
 
 /** 型付きで要素を引く。無ければ組み立てのミスなので即座に落とす。 */
 function $<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -114,6 +115,22 @@ function recordTime(): number {
 // ---- 入口(音声解禁) -------------------------------------------------------
 
 $("app-version").textContent = __APP_VERSION__;
+
+// 全画面。iPhone の Safari は <video> 以外の全画面に対応せず、呼んでも例外すら出ずに
+// 何も起きないので、対応している環境でだけボタンを出す。
+if (isFullscreenSupported()) {
+  const btn = $("btn-fullscreen");
+  btn.hidden = false;
+  btn.addEventListener("click", () => void toggleFullscreen());
+  // Esc や端末の戻る操作でも全画面は解除される。表示は必ず実際の状態から作る。
+  const syncFullscreenButton = (): void => {
+    const active = isFullscreenActive();
+    btn.textContent = active ? "⤢" : "⛶";
+    btn.setAttribute("aria-label", active ? "全画面をやめる" : "全画面");
+  };
+  onFullscreenChange(syncFullscreenButton);
+  syncFullscreenButton();
+}
 
 $("start-button").addEventListener("click", () => {
   void (async () => {
