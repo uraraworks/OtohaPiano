@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>おとは — 使い方</title>
+<meta name="description" content="おとは（Otoha Piano）の使い方。曲の登録から、くりかえし練習・お手本・おとあてまで。" />
+<link rel="icon" href="./icon/otoha-192.png" />
+<style>
+  :root{
+    --ink:#443a5e; --paper:#ffffff; --ground:#f6f1fb;
+    --sub:#6b5f88; --line:#ddd2ee;
+    --amber:#ffc247; --amber-ink:#5a3c00; --plum:#8f7ac4; --sky:#57b8e8; --rose:#e08bb0;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    line-height:1.85; font-size:16px;
+  }
+  .wrap{max-width:780px; margin:0 auto; padding:0 20px 80px}
+  a{color:inherit}
+  ruby rt{font-size:.5em; color:var(--sub); font-weight:400}
+
+  .flag{background:var(--amber); color:var(--amber-ink); text-align:center;
+    padding:10px 16px; font-size:14px; font-weight:700}
+
+  header{text-align:center; padding:48px 0 32px}
+  header img{width:96px; height:96px; display:block; margin:0 auto 14px}
+  h1{font-size:34px; margin:0 0 6px; letter-spacing:.1em}
+  .tagline{font-size:16px; color:var(--sub); margin:0}
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:26px 0 0}
+  .btn{display:inline-block; padding:12px 24px; border-radius:14px; text-decoration:none;
+    font-weight:700; border:2px solid var(--ink)}
+  .btn-main{background:var(--ink); color:var(--paper)}
+  .btn-sub{background:transparent; color:var(--ink)}
+
+  section{background:var(--paper); border:1px solid var(--line); border-radius:18px;
+    padding:26px 24px; margin:18px 0}
+  h2{font-size:20px; margin:0 0 6px; letter-spacing:.04em; display:flex; align-items:center; gap:10px}
+  h2::before{content:""; flex:0 0 auto; width:10px; height:10px; border-radius:3px; background:var(--plum)}
+  section:nth-of-type(2) h2::before{background:var(--sky)}
+  section:nth-of-type(3) h2::before{background:var(--amber)}
+  section:nth-of-type(4) h2::before{background:var(--rose)}
+  section:nth-of-type(5) h2::before{background:var(--plum)}
+  section:nth-of-type(6) h2::before{background:var(--sky)}
+  section:nth-of-type(7) h2::before{background:var(--amber)}
+  h3{font-size:16px; margin:22px 0 6px}
+  p{margin:0 0 12px}
+  p:last-child{margin-bottom:0}
+  ol,ul{margin:0 0 12px; padding-left:1.3em}
+  li{margin-bottom:6px}
+  .note{font-size:14px; color:var(--sub)}
+  .lead{color:var(--sub); margin-top:-2px}
+
+  /* 画面の見本。実物の写しではなく、同じ配色で組んだ模型。
+     実在する動画のサムネイルや題名は載せない(他人の著作物なので)。 */
+  .mock{border:1px solid var(--line); border-radius:14px; background:var(--ground);
+    padding:12px; margin:12px 0}
+  .mock-cap{font-size:13px; color:var(--sub); margin:6px 2px 0}
+  .card{display:flex; gap:10px; align-items:center; background:#fff;
+    border:1px solid var(--line); border-radius:10px; padding:8px}
+  .thumb{flex:0 0 auto; width:112px; height:63px; border-radius:6px; overflow:hidden}
+  .card-title{font-size:14px; line-height:1.4}
+  .card-sub{font-size:12px; color:var(--sub)}
+
+  .keys{position:relative; height:96px; background:#ece4f8; border-radius:8px; overflow:hidden}
+  .kw{position:absolute; top:0; bottom:0; width:14.28%; background:#fff;
+    border:1px solid #c9bee0; display:flex; align-items:flex-end; justify-content:center;
+    padding-bottom:6px; font-size:12px; color:#7b6f98}
+  .kb{position:absolute; top:0; height:60%; width:9%; background:#3a3350;
+    border:1px solid #241f36; border-radius:0 0 4px 4px}
+  .kw.lit{background:#ffeeb8; box-shadow:0 0 10px 2px var(--amber) inset}
+
+  .drill{background:#ece4f8; border:2px solid var(--amber); border-radius:12px;
+    padding:12px; text-align:center}
+  .qno{display:inline-block; padding:6px 18px; background:#fff; border:1px solid var(--line);
+    border-radius:999px; font-weight:700}
+  .qbody{font-size:44px; font-weight:700; padding:14px 0}
+  .qbody .now{background:var(--amber); color:var(--amber-ink); border-radius:10px; padding:0 12px}
+  .qstat{font-size:13px; color:var(--sub)}
+
+  /* アプリと同じ絵を出す(src/ui/icons.ts から写したもの)。
+     絵文字だと端末ごとに絵柄が変わり、画面と見比べたときに一致しない。 */
+  .ic{width:22px; height:22px; vertical-align:-.35em}
+
+  kbd{display:inline-block; min-width:1.9em; padding:2px 6px; margin:0 1px;
+    font-family:inherit; font-size:13px; text-align:center;
+    background:#fff; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px}
+  .keyrow{margin:6px 0}
+  .keyrow b{display:inline-block; width:3.2em; font-size:13px; color:var(--sub)}
+
+  table{border-collapse:collapse; width:100%; font-size:15px}
+  th,td{text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--line)}
+  tr:last-child th,tr:last-child td{border-bottom:none}
+  th{white-space:nowrap; width:8.5em; font-weight:700}
+
+  footer{text-align:center; color:var(--sub); font-size:14px; padding:10px 0 0}
+  footer a{text-decoration:underline}
+
+  @media (max-width:520px){
+    h1{font-size:28px}
+    header{padding:34px 0 24px}
+    section{padding:20px 16px}
+    .thumb{width:88px; height:50px}
+    tr{display:block; padding:9px 0; border-bottom:1px solid var(--line)}
+    tr:last-child{border-bottom:none}
+    th,td{display:block; width:auto; padding:0; border:none}
+    th{margin-bottom:2px; color:var(--sub); font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<div class="flag">制作途中のプロトタイプです（v0）。仕様も見た目も、まだ変わります。</div>
+
+<div class="wrap">
+
+<header>
+  <img src="./icon/otoha-512.png" alt="" />
+  <h1>おとは の 使い方</h1>
+  <p class="tagline">YouTube を見ながら弾く、ブラウザで開くだけのピアノ。</p>
+  <div class="cta">
+    <a class="btn btn-main" href="./">さわってみる</a>
+    <a class="btn btn-sub" href="./intro.html">これは何か</a>
+  </div>
+</header>
+
+<section>
+  <h2>はじめに（大人の方へ）</h2>
+  <p class="lead">最初の一度だけ、曲の登録をしてあげてください。あとは子どもだけで使えます。</p>
+  <ol>
+    <li>おとはを開いて、まん中の「<ruby>始<rt>はじ</rt></ruby>める」を押します</li>
+    <li>YouTube アプリで練習したい曲を開き、「共有」から URL をコピーします</li>
+    <li>おとはの「曲」の欄に貼りつけて、「追加」を押します</li>
+  </ol>
+  <p>
+    貼りつける URL は <code>https://youtu.be/…</code> でも <code>https://www.youtube.com/watch?v=…</code> でも
+    かまいません。共有についてくる <code>?si=…</code> も、前後の文章も、そのままで大丈夫です。
+  </p>
+
+  <div class="mock">
+    <div class="card">
+      <div class="thumb">
+        <svg viewBox="0 0 112 63" width="112" height="63" role="img" aria-label="動画の見本">
+          <rect width="112" height="63" fill="#2f2652"/>
+          <circle cx="34" cy="30" r="13" fill="#8f7ac4"/>
+          <path d="M40 18l3-6" stroke="#8f7ac4" stroke-width="3" stroke-linecap="round"/>
+          <path d="M62 44h34M62 36h26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+          <path d="M62 26h20" stroke="#ffc247" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="card-title">（見本）ねこの さんぽ</div>
+        <div class="card-sub">じっさいには、登録した動画の題名と絵が出ます</div>
+      </div>
+    </div>
+    <p class="mock-cap">「曲」の欄に並ぶ様子。子どもはこの絵を押すだけで再生できます。</p>
+  </div>
+
+  <p class="note">
+    アプリの中に曲を探す窓は<strong>あえて置いていません</strong>。子どもが別の動画へ
+    迷い込む入口を作らないためです。共有 URL に「ここから再生」の時間が入っていれば、
+    登録したときに一緒に覚えます。
+  </p>
+</section>
+
+<section>
+  <h2>画面の見かた</h2>
+  <p class="lead">上に動画、右（縦画面では下）に 4 つのタブ、いちばん下に鍵盤があります。</p>
+  <table>
+    <tr><th>曲</th><td>練習する動画を選ぶところ。URL の登録もここ</td></tr>
+    <tr><th>おてほん</th><td>上手な人の演奏を残して、光る鍵盤で見せるところ。マイクの録音メモもここ</td></tr>
+    <tr><th>おとあて</th><td>音と「ドレミ」をむすびつける練習。動画とは関係なく遊べます</td></tr>
+    <tr><th>道具</th><td>メトロノーム・音量・鍵盤の広さ</td></tr>
+  </table>
+  <p class="note">
+    鍵盤は指を何本置いても鳴ります（和音・連打）。左右の「ひくく／たかく」で音の高さの
+    場所を移せます。押さえたまま横へ滑らせると、グリッサンドになります。
+  </p>
+</section>
+
+<section>
+  <h2>曲に合わせて弾く</h2>
+
+  <h3>ゆっくりにする</h3>
+  <p>
+    <svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21v4M14 22v4M19 22v4M24 21v3"/> <path d="M6 21a10 7 0 0 1 20 0z" fill="#9ed08f"/> <path d="M11 21a5 4 0 0 1 10 0" stroke-width="1.4"/> <path d="M26 19.5c2.6-.4 4 .7 4 1.8s-1.4 1.9-3.4 1.7"/> <circle cx="28.4" cy="20.6" r="0.7" fill="#443a5e" stroke="none"/> <path d="M6 21.5c-1.6 0-2.6.7-3 1.6"/></svg> 0.5 ／ <svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="7" r="3" fill="#e8d6b0"/> <path d="M17 11v7M17 18l-3 8M17 18l4 7M17 13l-5 3M17 13l5 2"/></svg> 0.75 ／ <svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="7" r="3" fill="#e8d6b0"/> <path d="M19 11l-3 6M16 17l-5 3M16 17l4 4M20 21l-1 6M16 13l6 1M6 15h4M5 20h4"/></svg> 1.0 の 3 段階。<strong>遅くしても音の高さは変わらない</strong>ので、
+    そのまま鍵盤で合わせられます。
+  </p>
+
+  <h3>むずかしいところを くりかえす</h3>
+  <ol>
+    <li>くりかえしたいところの手前で「<strong>A（ここから）</strong>」を押す</li>
+    <li>終わりたいところで「<strong>B（ここまで）</strong>」を押す</li>
+  </ol>
+  <p>
+    その区間だけを何度も繰り返します。「とりけし」で解除。
+    区間は曲ごとに覚えるので、次に開いたときも続きから練習できます。
+  </p>
+
+  <h3>ここを おぼえる</h3>
+  <p>
+    練習を始めたい位置に印を付けられます。いくつでも作れて、押すとその位置へ飛びます。
+    印の「✕」で消せます。
+  </p>
+</section>
+
+<section>
+  <h2>おてほんを つくる</h2>
+  <p class="lead">弾ける人が一度弾いておくと、音が鳴って鍵盤が光る「おてほん」になります。</p>
+  <ol>
+    <li>動画を再生する</li>
+    <li>「おてほん」タブの「打鍵を ろくおん」を押す</li>
+    <li>曲に合わせて鍵盤を弾く</li>
+    <li>「ろくおんを おわる」を押す</li>
+  </ol>
+  <p>
+    <strong>動画を流しながら録るのが大事</strong>です。押した鍵とタイミングが動画の時刻に
+    結びつくので、巻き戻しても、くりかえしても、遅くしても、おてほんがぴたりと付いてきます。
+  </p>
+
+  <div class="mock">
+    <div class="keys" aria-hidden="true">
+      <div class="kw lit" style="left:0%">ド</div>
+      <div class="kw" style="left:14.28%">レ</div>
+      <div class="kw lit" style="left:28.56%">ミ</div>
+      <div class="kw" style="left:42.84%">ファ</div>
+      <div class="kw lit" style="left:57.12%">ソ</div>
+      <div class="kw" style="left:71.4%">ラ</div>
+      <div class="kw" style="left:85.68%">シ</div>
+      <div class="kb" style="left:9.8%"></div>
+      <div class="kb" style="left:24%"></div>
+      <div class="kb" style="left:52.6%"></div>
+      <div class="kb" style="left:66.8%"></div>
+      <div class="kb" style="left:81%"></div>
+    </div>
+    <p class="mock-cap">おてほんを再生すると、押す鍵が光ります（見本：ド・ミ・ソ）。</p>
+  </div>
+
+  <p>
+    「音を出す」「けんばんを 光らせる」は別々に切れます。音を消して光だけにすると、
+    自分の音を聞きながら練習できます。「ドレミを 出す」を入れると、画面の下に音名が流れます
+    （印刷もできます）。
+  </p>
+
+  <h3>マイクの ろくおんメモ</h3>
+  <p>
+    本物のピアノ・先生・お友達の演奏など、<strong>アプリの外の音</strong>を残せます。
+    録音は端末の中だけに保存され、どこにも送られません。マイクの無い端末では録音のボタンごと出ません。
+  </p>
+</section>
+
+<section>
+  <h2>おとあて（音と ドレミ を むすびつける）</h2>
+  <p class="lead">
+    出たおだいの鍵を押すだけ。やめるまで続きます。曲は使いません。
+  </p>
+  <ol>
+    <li>おだいの出しかたを選ぶ（下の表）</li>
+    <li>やり方・はんい・同時に鳴る数を選ぶ</li>
+    <li>「スタート」を押す</li>
+  </ol>
+  <table>
+    <tr><th><svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5a7 7 0 0 0-4 12.8V21h8v-3.2A7 7 0 0 0 16 5z" fill="#e8d6b0"/> <path d="M13 24h6M14 27h4"/></svg> 光る</th><td>押す鍵が光ります。まず場所に慣れるための段階</td></tr>
+    <tr><th><svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="24" height="20" rx="4" fill="#ffffff"/> <text x="16" y="17" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#443a5e" stroke="none" font-family="inherit">ド</text></svg> 文字</th><td>「ド」のように文字で出ます。<strong>文字と鍵</strong>がむすびつきます</td></tr>
+    <tr><th><svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 13a7 7 0 1 0-13.4 3c1 2.2 1.4 3.6.6 5.4-.8 1.8.4 3.6 2.4 3.6 2.2 0 3-1.6 3.4-3.4.5-2.2 1.6-3 3.2-4A6 6 0 0 0 22 13z" fill="#e8d6b0"/> <path d="M13 14a3.4 3.4 0 0 1 6.4 1.4c0 2-2 2.6-2.6 4.4"/></svg> 音</th><td>音だけ鳴ります。<strong>聞いた音がどれか</strong>わかるようになります</td></tr>
+    <tr><th><svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h26M3 13h26M3 18h26M3 23h26M3 28h26" stroke-width="1.5"/> <ellipse cx="17" cy="23" rx="4" ry="3" fill="#a48fd0" transform="rotate(-18 17 23)"/> <path d="M20.8 22V7" stroke-width="1.8"/></svg> 音符</th><td>五線の音符で出ます。<strong>楽譜と鍵</strong>がむすびつきます</td></tr>
+  </table>
+  <p>
+    上から順にヒントが減っていきます。光を追うだけでは音の名前は覚えないので、
+    慣れたら「文字」→「音」と外していってください。
+  </p>
+
+  <div class="mock">
+    <div class="drill">
+      <div class="qno"><ruby>第<rt>だい</rt></ruby>3<ruby>問<rt>もん</rt></ruby></div>
+      <div class="qbody"><span class="now">ミ</span></div>
+      <div class="qstat">できた 12 ／ 間違え 1 ／ 34 音/分</div>
+    </div>
+    <p class="mock-cap">「文字」で遊んでいるところ。答えると ◎ か ✗ が出て、次の問題へ進みます。</p>
+  </div>
+
+  <p>
+    まちがえても<strong>答えは教えません</strong>。「もっと 高い <svg class="ic" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="#443a5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 27V7M8 15l8-8 8 8" stroke-width="3"/></svg>」のように向きだけ出るので、
+    自分で探して当てられます。「1つでも まちがえたら おわり」を選ぶと、
+    何音続いたかの記録に挑戦できます。
+  </p>
+  <p class="note">
+    弾き方（指づかい・手の形・姿勢）はあつかいません。これは資格を持った人が作る教材では
+    ないので、そこに口を出すとかえって妙なクセを付けかねないからです。
+    「この音は ド」「ド はこの鍵」という対応だけを練習します。
+  </p>
+</section>
+
+<section>
+  <h2>パソコンのキーボードで弾く</h2>
+  <p class="lead">画面には出していない、大人向けのおまけです（日本語キーボードの刻印）。</p>
+  <div class="keyrow"><b>黒鍵</b>
+    <kbd>W</kbd><kbd>E</kbd>　<kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd>　<kbd>O</kbd><kbd>P</kbd>　<kbd>@</kbd><kbd>[</kbd>
+  </div>
+  <div class="keyrow"><b>白鍵</b>
+    <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd><kbd>;</kbd><kbd>:</kbd><kbd>]</kbd>
+  </div>
+  <div class="keyrow"><b></b>
+    ド レ ミ ファ ソ ラ シ ド レ ミ ファ ソ
+  </div>
+  <p>
+    <kbd>A</kbd> が鍵盤のいちばん左です。「ひくく／たかく」で場所を移すと、鳴る音も一緒に動きます。
+    画面の鍵盤とまったく同じ扱いなので、おてほんの録音にも、おとあての判定にも使えます。
+    URL を入力している間は鳴りません。
+  </p>
+</section>
+
+<section>
+  <h2>こまったとき</h2>
+  <table>
+    <tr><th>音が出ない</th><td>最初の「始める」を押すと音が出るようになります（ブラウザの決まりで、一度画面に触れるまで音を鳴らせません）。それでも出なければ「道具」の音量と、端末の音量をご確認ください</td></tr>
+    <tr><th>録音のボタンが無い</th><td>マイクの無い端末では出しません。押しても失敗するボタンを見せないためです</td></tr>
+    <tr><th>全画面のボタンが無い</th><td>iPhone の Safari は動画以外の全画面に対応していないため出ません。iPad・Android・パソコンでは出ます</td></tr>
+    <tr><th>登録した曲や記録が消えた</th><td>すべて端末のブラウザの中に保存されています。履歴やサイトデータを消すと一緒に消えます。別の端末とは共有されません</td></tr>
+    <tr><th>動画が出ない</th><td>限定公開・削除・地域制限などで再生できないことがあります。別の動画でお試しください</td></tr>
+  </table>
+</section>
+
+<footer>
+  <p>
+    © 2026 URARA-works ／
+    <a href="./">おとはを開く</a> ／
+    <a href="./intro.html">これは何か</a> ／
+    <a href="https://github.com/uraraworks/OtohaPiano">GitHub</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

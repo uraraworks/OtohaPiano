@@ -14,6 +14,7 @@
 
 - 公開先：https://uraraworks.github.io/OtohaPiano/
 - 紹介ページ：https://uraraworks.github.io/OtohaPiano/intro.html （`public/intro.html`）
+- 使い方：https://uraraworks.github.io/OtohaPiano/howto.html （`public/howto.html`）
 - 実装メモ・設計判断：[docs/v0-notes.md](docs/v0-notes.md)
 
 **制作途中のプロトタイプ（v0）です。** 仕様も見た目も、まだ変わります。
@@ -27,6 +28,8 @@
 
 あとは子どもがサムネイルを押すだけです。動画が再生され、画面の下の鍵盤で弾けます。
 **検索の窓はあえて置いていません**（子どもが別の動画へ迷い込む入口を作らないため）。
+
+各機能の手順は [使い方](public/howto.html) にまとめてある。
 
 共有 URL に `&t=90s` のような開始位置が入っていれば、登録時に「ここから練習」として
 一緒に覚えます。
