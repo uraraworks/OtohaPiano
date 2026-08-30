@@ -7,23 +7,6 @@
 //   差し替えるときはこのファイルの play/stop を保ったまま中身だけ替えればよい。
 
 import { midiToFreq } from "./notes.ts";
-import { renderString, pianoStringOptions } from "./stringVoice.ts";
-
-/** 1 つの倍音。 */
-export interface Partial {
-  /** 基音に対する周波数の倍率。1 が基音。 */
-  ratio: number;
-  /** 音量。 */
-  level: number;
-  type: OscillatorType;
-  /**
-   * この倍音だけの減衰の速さ（楽器全体の decay に掛ける）。小さいほど速く消える。
-   * ピアノらしさはここで決まる。実際の弦は高い倍音ほど速く減衰するので、
-   * 全部の倍音を同じ速さで減衰させると、いつまでも硬い音が残って
-   * オルガンのように聞こえる。
-   */
-  decayScale?: number;
-}
 
 /** 倍音の並びと包絡線で楽器の音色を作る。 */
 export interface Instrument {
@@ -31,7 +14,8 @@ export interface Instrument {
   label: string;
   /** ボタンに出す絵文字。文字が読めなくても選べるように。 */
   emoji: string;
-  partials: Partial[];
+  /** 各倍音の [倍率, 音量, 波形]。倍率 1 が基音。 */
+  partials: Array<[number, number, OscillatorType]>;
   /** 立ち上がり(秒)。小さいほど硬い音。 */
   attack: number;
   /** 鍵を押している間に減っていく速さ(秒)。0 なら減衰しない(オルガン系)。 */
@@ -40,40 +24,6 @@ export interface Instrument {
   sustain: number;
   /** 離鍵後に消えるまで(秒)。 */
   release: number;
-  /**
-   * 弦の硬さによる倍音のずれ。ピアノの倍音は整数倍より少し高い所にある
-   * (n 倍音が n 倍ちょうどだと、電子的な響きになる)。0 なら整数倍のまま。
-   */
-  inharmonicity?: number;
-  /**
-   * 高い音ほど速く減衰させるか。ピアノは低音が長く伸び、高音はすぐ消える。
-   * 一律にすると、高い音がいつまでも鳴り続けて不自然になる。
-   */
-  decayTracksPitch?: boolean;
-  /** 打鍵の瞬間に混ぜる音(ハンマーが弦を叩く音)。0〜1。 */
-  hammer?: number;
-  /**
-   * 音の作り方。
-   *   additive … 倍音を足して作る。オルガン系や金属の響きはこれで足りる
-   *   string   … 弦の振動を計算する。ピアノはこちら。倍音を足す方式では
-   *              弦が複数本あることや打鍵直後の複雑な音を作れず、
-   *              どうしても電子ピアノの音になる
-   */
-  synthesis?: "additive" | "string";
-}
-
-/**
- * 倍音の並びを作る。
- * @param levels 基音から順に並べた音量。
- * @param decayFalloff 上の倍音がどれだけ速く消えるか。大きいほど速い。
- */
-function harmonics(levels: number[], decayFalloff: number): Partial[] {
-  return levels.map((level, i) => ({
-    ratio: i + 1,
-    level,
-    type: "sine" as OscillatorType,
-    decayScale: 1 / (1 + decayFalloff * i),
-  }));
 }
 
 export const INSTRUMENTS: Instrument[] = [
@@ -81,31 +31,19 @@ export const INSTRUMENTS: Instrument[] = [
     id: "piano",
     label: "ピアノ",
     emoji: "🎹",
-    // グランドピアノ。倍音は正弦波で積み、上へ行くほど弱く・速く消えるようにする。
-    // 波形そのもの(三角波など)で作ると倍音の減衰を個別に制御できず、
-    // 減衰しても音色が変わらない=電子オルガンのような響きになる。
-    // 弦の振動そのものを計算する。倍音を足す方式では、1 音に弦が 2〜3 本あって
-    // 互いにずれて唸ることや、打鍵直後の複雑な音が作れない。
-    synthesis: "string",
-    partials: [],
-    attack: 0.001,
-    decay: 0,
-    sustain: 0,
-    // 離鍵はダンパーが弦を止める動き。ピアノは速い。
-    release: 0.14,
+    // 基音 + 弱い倍音。押したまま徐々に減衰するのがピアノらしさ。
+    partials: [[1, 1.0, "triangle"], [2, 0.32, "sine"], [3, 0.14, "sine"], [4, 0.06, "sine"]],
+    attack: 0.004,
+    decay: 2.4,
+    sustain: 0.0,
+    release: 0.32,
   },
   {
     id: "organ",
     label: "エレクトーン",
     emoji: "🎛️",
     // 押している間ずっと同じ音量で鳴り続ける(減衰しない)のがオルガン系。
-    partials: [
-      { ratio: 1, level: 0.9, type: "sine" },
-      { ratio: 2, level: 0.5, type: "sine" },
-      { ratio: 3, level: 0.28, type: "sine" },
-      { ratio: 4, level: 0.2, type: "sine" },
-      { ratio: 8, level: 0.1, type: "sine" },
-    ],
+    partials: [[1, 0.9, "sine"], [2, 0.5, "sine"], [3, 0.28, "sine"], [4, 0.2, "sine"], [8, 0.1, "sine"]],
     attack: 0.02,
     decay: 0.1,
     sustain: 0.85,
@@ -114,31 +52,19 @@ export const INSTRUMENTS: Instrument[] = [
   {
     id: "musicbox",
     label: "オルゴール",
+    // ト音記号ではオルゴールに見えないので、金属の弁をはじく音に寄せて鈴にする。
     emoji: "🔔",
-    // 金属の弁をはじく音。倍音が整数倍から大きく外れているのが金属らしさで、
-    // 上の倍音ほど速く消えると「チン」という当たりになる。
-    partials: [
-      { ratio: 1, level: 0.8, type: "sine", decayScale: 1 },
-      { ratio: 3.9, level: 0.34, type: "sine", decayScale: 0.45 },
-      { ratio: 8.2, level: 0.16, type: "sine", decayScale: 0.22 },
-      { ratio: 13.5, level: 0.06, type: "sine", decayScale: 0.12 },
-    ],
+    partials: [[1, 0.8, "sine"], [4, 0.35, "sine"], [7.2, 0.18, "sine"], [11, 0.07, "sine"]],
     attack: 0.002,
-    decay: 1.3,
+    decay: 1.1,
     sustain: 0.0,
     release: 0.5,
-    decayTracksPitch: true,
-    hammer: 0.35,
   },
   {
     id: "strings",
     label: "ストリングス",
     emoji: "🎻",
-    partials: [
-      { ratio: 1, level: 0.7, type: "sawtooth" },
-      { ratio: 2, level: 0.18, type: "sine" },
-      { ratio: 3, level: 0.08, type: "sine" },
-    ],
+    partials: [[1, 0.7, "sawtooth"], [2, 0.18, "sine"], [3, 0.08, "sine"]],
     attack: 0.14,
     decay: 0.3,
     sustain: 0.7,
@@ -151,8 +77,6 @@ interface Voice {
   gain: GainNode;
   /** 離鍵処理を二重に走らせないための印。 */
   releasing: boolean;
-  /** 弦モデルのとき、鳴らしている波形。 */
-  source?: AudioBufferSourceNode;
 }
 
 export class Synth {
@@ -165,10 +89,6 @@ export class Synth {
   private voices = new Map<number, Voice>();
   private instrument: Instrument = INSTRUMENTS[0]!;
   private volume = 0.7;
-  /** 打鍵音に使う雑音。1 つ作って使い回す。 */
-  private noiseBuffer: AudioBuffer | null = null;
-  /** 弦の波形。音の高さごとに 1 回だけ計算して使い回す。 */
-  private stringCache = new Map<number, AudioBuffer>();
 
   /**
    * 音声を解禁する。ブラウザの自動再生制限があるため、
@@ -200,15 +120,6 @@ export class Synth {
     if (found) this.instrument = found;
   }
 
-  /**
-   * よく使う範囲の弦の波形を先に作っておく。
-   * 最初の 1 音目で計算が走ると、そのときだけ音が遅れて出る。
-   */
-  warmUp(fromMidi: number, count: number): void {
-    if (this.instrument.synthesis !== "string") return;
-    for (let m = fromMidi; m < fromMidi + count; m++) this.stringBuffer(m);
-  }
-
   getInstrument(): Instrument {
     return this.instrument;
   }
@@ -222,145 +133,41 @@ export class Synth {
     return this.volume;
   }
 
-  /**
-   * 弦の硬さによる倍音のずれ。n 倍音は n 倍より少し高い所に来る。
-   * ちょうど整数倍だと、うなりが生まれず作り物めいた響きになる。
-   */
-  private partialFreq(baseFreq: number, ratio: number, inharmonicity: number): number {
-    if (inharmonicity <= 0) return baseFreq * ratio;
-    return baseFreq * ratio * Math.sqrt(1 + inharmonicity * ratio * ratio);
-  }
-
-  /** 打鍵の瞬間に混ぜる短い雑音(ハンマーが弦を叩く音)。 */
-  private playHammer(amount: number, freq: number, t0: number, peak: number): void {
-    const ctx = this.ctx;
-    const master = this.master;
-    if (!ctx || !master) return;
-    if (!this.noiseBuffer) {
-      // 使い回す。打鍵のたびに作ると、和音や連打で無駄が積み上がる。
-      const len = Math.floor(ctx.sampleRate * 0.05);
-      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-      this.noiseBuffer = buf;
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = this.noiseBuffer;
-    const band = ctx.createBiquadFilter();
-    band.type = "bandpass";
-    // 音の高さに合わせて当たりの色も変える。低音は鈍く、高音は硬く。
-    band.frequency.value = Math.min(6000, Math.max(600, freq * 4));
-    band.Q.value = 0.8;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(peak * amount, t0);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
-    src.connect(band);
-    band.connect(g);
-    g.connect(master);
-    src.start(t0);
-    src.stop(t0 + 0.06);
-  }
-
-  /**
-   * 弦の波形を用意する。音の高さごとに 1 回だけ計算し、以降は使い回す。
-   * 生成は数ミリ秒。初めてその鍵を押したときだけ走る。
-   */
-  private stringBuffer(midi: number): AudioBuffer | null {
-    const ctx = this.ctx;
-    if (!ctx) return null;
-    const cached = this.stringCache.get(midi);
-    if (cached) return cached;
-    // 乱数は音の高さから決める。同じ鍵はいつも同じ音になり、
-    // 連打しても音色がちらつかない。
-    let seed = midi * 2654435761;
-    const rng = (): number => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
-    };
-    const wave = renderString(pianoStringOptions(midi, ctx.sampleRate, rng));
-    const buf = ctx.createBuffer(1, wave.length, ctx.sampleRate);
-    // copyToChannel は SharedArrayBuffer 由来の配列を受け取れない型になっている。
-    // 生成側は通常の Float32Array なので、そのまま書き写す。
-    buf.getChannelData(0).set(wave);
-    this.stringCache.set(midi, buf);
-    return buf;
-  }
-
-  /** 弦モデルで鳴らす。 */
-  private noteOnString(midi: number, velocity: number): void {
-    const ctx = this.ctx;
-    const master = this.master;
-    if (!ctx || !master) return;
-    const buf = this.stringBuffer(midi);
-    if (!buf) return;
-
-    const t0 = ctx.currentTime;
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const gain = ctx.createGain();
-    // 高い音ほど耳につくので、上に行くほど少し絞る。
-    const tilt = Math.pow(0.5, Math.max(0, midi - 60) / 36);
-    gain.gain.value = 0.5 * velocity * tilt;
-    src.connect(gain);
-    gain.connect(master);
-    src.start(t0);
-    this.voices.set(midi, { osc: [], gain, releasing: false, source: src });
-  }
-
   /** 鍵を押す。velocity は 0〜1。 */
   noteOn(midi: number, velocity = 1): void {
     const ctx = this.ctx;
     const master = this.master;
     if (!ctx || !master) return;
     this.noteOff(midi, true);
-    if (this.instrument.synthesis === "string") {
-      this.noteOnString(midi, velocity);
-      return;
-    }
 
     const inst = this.instrument;
     const t0 = ctx.currentTime;
     const gain = ctx.createGain();
-    gain.gain.value = 1;
     // 高い音ほど耳につくので、上に行くほど少し絞る(そうしないと最高音だけ刺さる)。
     const tilt = Math.pow(0.5, Math.max(0, midi - 60) / 36);
     const peak = 0.28 * velocity * tilt;
+
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(peak, t0 + inst.attack);
+    if (inst.decay > 0) {
+      const sustainLevel = Math.max(0.0001, peak * inst.sustain);
+      // 指数カーブの方が自然に減衰して聞こえる。0 は渡せないので下限を置く。
+      gain.gain.setTargetAtTime(sustainLevel, t0 + inst.attack, inst.decay / 3);
+    }
     gain.connect(master);
 
-    // ピアノは低音が長く伸び、高音はすぐ消える。一律にすると高音が鳴り残る。
-    const pitchScale = inst.decayTracksPitch ? Math.pow(0.5, (midi - 48) / 30) : 1;
-    const baseDecay = inst.decay * pitchScale;
-    const baseFreq = midiToFreq(midi);
-
-    // 倍音の合計で音量が決まってしまうと、倍音を増やした楽器だけ大きくなる。
-    // 合計を一定に揃えて、楽器を切り替えても音量が変わらないようにする。
-    const levelSum = inst.partials.reduce((a, p) => a + p.level, 0);
-    const norm = levelSum > 0 ? 1.5 / levelSum : 1;
-
     const osc: OscillatorNode[] = [];
-    for (const p of inst.partials) {
+    for (const [ratio, level, type] of inst.partials) {
       const o = ctx.createOscillator();
-      o.type = p.type;
-      o.frequency.value = this.partialFreq(baseFreq, p.ratio, inst.inharmonicity ?? 0);
-      // 倍音ごとに包絡線を持たせるのが要点。上の倍音を速く消すことで、
-      // 鳴っている間に音色が丸くなっていく(これが弦らしさになる)。
+      o.type = type;
+      o.frequency.value = midiToFreq(midi) * ratio;
       const g = ctx.createGain();
-      const level = peak * p.level * norm;
-      const dec = baseDecay * (p.decayScale ?? 1);
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.linearRampToValueAtTime(level, t0 + inst.attack);
-      if (dec > 0) {
-        // 指数カーブの方が自然に減衰して聞こえる。0 は渡せないので下限を置く。
-        g.gain.setTargetAtTime(Math.max(0.0001, level * inst.sustain), t0 + inst.attack, dec / 3);
-      }
+      g.gain.value = level;
       o.connect(g);
       g.connect(gain);
       o.start(t0);
       osc.push(o);
     }
-
-    if (inst.hammer) this.playHammer(inst.hammer, baseFreq, t0, peak);
-
     this.voices.set(midi, { osc, gain, releasing: false });
   }
 
@@ -381,7 +188,6 @@ export class Synth {
     v.gain.gain.setValueAtTime(Math.max(v.gain.gain.value, 0.0001), t0);
     v.gain.gain.exponentialRampToValueAtTime(0.0001, t0 + rel);
     for (const o of v.osc) o.stop(t0 + rel + 0.02);
-    v.source?.stop(t0 + rel + 0.02);
     // ramp が終わってから切り離す。早すぎるとプツッと切れる。
     setTimeout(() => v.gain.disconnect(), (rel + 0.1) * 1000);
   }
