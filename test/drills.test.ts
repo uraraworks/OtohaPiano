@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DRILL_LEVELS, makeDrillSteps } from "../src/core/drills.ts";
+import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, makeDrillSteps } from "../src/core/drills.ts";
 import { noteNameJa } from "../src/core/notes.ts";
 
 const C4 = 60;
@@ -9,49 +9,93 @@ const seq = (values: number[]) => {
   return () => values[i++ % values.length]!;
 };
 
-describe("ドリルの出題", () => {
+describe("はんい", () => {
+  it("「ぜんぶ」は画面に出ている鍵盤に従う", () => {
+    const all = RANGE_OPTIONS.find((r) => r.id === "rall")!;
+    expect(poolSizeOf(all, 14)).toBe(14);
+    expect(poolSizeOf(all, 21)).toBe(21);
+  });
+
+  it("画面に出ている鍵盤より多くは使わない", () => {
+    // 鍵盤を狭く(白鍵 3 個)しているのに「5つ」を選んでも、画面に無い鍵は出さない。
+    const five = RANGE_OPTIONS.find((r) => r.id === "r5")!;
+    expect(poolSizeOf(five, 3)).toBe(3);
+  });
+
+  it("えらんだ数ぶんだけ使う", () => {
+    expect(poolSizeOf(RANGE_OPTIONS[0]!, 14)).toBe(3);
+    expect(poolSizeOf(RANGE_OPTIONS[1]!, 14)).toBe(5);
+  });
+});
+
+describe("出題", () => {
   it("指定した手数を作る", () => {
-    const steps = makeDrillSteps(DRILL_LEVELS[1]!, 8, C4, seq([0.1, 0.9, 0.5, 0.3]));
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 5, chordMax: 1, count: 8, rng: seq([0.1, 0.9, 0.5, 0.3]),
+    });
     expect(steps).toHaveLength(8);
   });
 
-  it("使う音は、そのレベルの範囲から出る", () => {
-    const level = DRILL_LEVELS[0]!; // ドレミ
-    const steps = makeDrillSteps(level, 30, C4, seq([0.05, 0.4, 0.75, 0.99, 0.2]));
+  it("はんい 3つ なら ドレミ しか出ない", () => {
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 3, chordMax: 1, count: 30, rng: seq([0.05, 0.4, 0.75, 0.99, 0.2]),
+    });
     for (const midi of steps.flat()) {
       expect(["ド", "レ", "ミ"]).toContain(noteNameJa(midi));
     }
   });
 
-  it("1 オクターブのレベルは、鍵盤 2 オクターブに収まる", () => {
-    // 収まらないと画面の外の鍵が答えになってしまう(鍵盤の既定は白鍵 14 個 = C4〜B5)。
-    const steps = makeDrillSteps(DRILL_LEVELS[3]!, 50, C4, seq([0.99, 0.1, 0.29, 0.6]));
-    for (const midi of steps.flat()) {
-      expect(midi).toBeGreaterThanOrEqual(C4);
-      expect(midi).toBeLessThanOrEqual(C4 + 23);
-    }
-  });
-
-  it("和音を許さないレベルでは単音しか出ない", () => {
-    const steps = makeDrillSteps(DRILL_LEVELS[0]!, 30, C4, seq([0.1, 0.2, 0.05]));
+  it("いちどに 1つ なら必ず単音", () => {
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 8, chordMax: 1, count: 30, rng: seq([0.9, 0.1, 0.5]),
+    });
     expect(steps.every((s) => s.length === 1)).toBe(true);
   });
 
-  it("和音のレベルでは 2 つ同時の手が混ざる", () => {
-    // 和音の抽選(rng < 0.3)に当たる値を挟んだ乱数を与える。
-    const steps = makeDrillSteps(DRILL_LEVELS[3]!, 20, C4, seq([0.5, 0.1]));
-    expect(steps.some((s) => s.length === 2)).toBe(true);
+  it("いちどに 3つ なら 1〜3 個の手が出る（上限を超えない）", () => {
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 8, chordMax: 3, count: 40, rng: seq([0.05, 0.4, 0.99, 0.6, 0.2, 0.8]),
+    });
+    const sizes = new Set(steps.map((s) => s.length));
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(3);
+    expect(sizes.size).toBeGreaterThan(1);
+  });
+
+  it("同時に鳴る音は重複しない", () => {
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 5, chordMax: 3, count: 40, rng: seq([0.99, 0.2, 0.7, 0.1]),
+    });
+    for (const s of steps) expect(new Set(s).size).toBe(s.length);
+  });
+
+  it("同時に鳴る音は低い順に並ぶ（表示も判定もこの順に頼る）", () => {
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 8, chordMax: 3, count: 30, rng: seq([0.8, 0.9, 0.1, 0.5, 0.3]),
+    });
+    for (const s of steps) expect(s).toEqual([...s].sort((a, b) => a - b));
+  });
+
+  it("はんいより多い音数を求められても、はんいの中で収める", () => {
+    // ドレミの 3 音しか無いところで「いちどに 5つ」は作れない。
+    const steps = makeDrillSteps({
+      baseMidi: C4, poolSize: 3, chordMax: 5, count: 20, rng: seq([0.99, 0.5, 0.1]),
+    });
+    for (const s of steps) expect(s.length).toBeLessThanOrEqual(3);
   });
 
   it("鍵盤の位置を動かすと、出題もその位置から作られる", () => {
-    const a = makeDrillSteps(DRILL_LEVELS[1]!, 5, C4, seq([0.1, 0.9]));
-    const b = makeDrillSteps(DRILL_LEVELS[1]!, 5, C4 + 12, seq([0.1, 0.9]));
-    expect(b.flat()).toEqual(a.flat().map((m) => m + 12));
+    const mk = (base: number) =>
+      makeDrillSteps({ baseMidi: base, poolSize: 5, chordMax: 1, count: 5, rng: seq([0.1, 0.9]) });
+    expect(mk(C4 + 12).flat()).toEqual(mk(C4).flat().map((m) => m + 12));
   });
 
-  it("同じ音は続けて出さない", () => {
-    // 常に同じ音を引く乱数でも引き直しが走る(引き直しても同じ値なら諦める)。
-    const steps = makeDrillSteps(DRILL_LEVELS[1]!, 6, C4, () => 0);
+  it("同じ手は続けて出さない", () => {
+    // 常に同じ手を引く乱数でも引き直しが走る(引き直しても同じなら諦める)。
+    const steps = makeDrillSteps({ baseMidi: C4, poolSize: 5, chordMax: 1, count: 6, rng: () => 0 });
     expect(steps).toHaveLength(6);
+  });
+
+  it("えらべる同時発音数は 1〜3", () => {
+    expect([...CHORD_OPTIONS]).toEqual([1, 2, 3]);
   });
 });

@@ -468,70 +468,194 @@ ruby rt {
   font-weight: 700;
 }
 
-.practice-bar {
-  height: 10px;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  overflow: hidden;
+
+
+
+
+
+
+
+/* ---- おとあて ---------------------------------------------------------- */
+
+.practice-panel {
+  /* 設定は上、おだいは下。おだいは縦の空きを全部使う。 */
+  gap: 10px;
 }
 
-.practice-fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: var(--accent);
-  transition: width 0.15s;
+.practice-settings {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* 設定はすべて中央に寄せる。おだいが中央に出るので、視線の軸を 1 本にする。 */
+  align-items: center;
+  text-align: center;
 }
 
-.practice-meta {
+.practice-settings .exercise-list {
+  width: 100%;
+}
+
+.setting-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.9rem;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.practice-meta span {
+.start-row {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+}
+
+.btn-start {
+  min-height: 60px;
+  padding: 0 48px;
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--accent-shadow);
+  cursor: pointer;
+}
+
+.btn-start:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--accent-shadow);
+}
+
+.practice-now {
+  /* 縦の空きをすべて受け取る。おだいはこの中でさらに広がる。 */
   flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-3);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
 }
 
-.practice-aim {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--fg-dim);
+.practice-head {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40px;
 }
 
-/* 最後まで押し切ったときだけ、短く喜ぶ。 */
-.practice-now.is-done {
-  animation: practice-done 0.5s ease-out 2;
-}
-
-@keyframes practice-done {
-  50% {
-    background: var(--accent);
-  }
+.practice-quit {
+  /* 中央の「第 N 問」を押しのけないよう、右端に浮かせる。 */
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .question-no {
-  flex: 0 0 auto;
-  padding: 3px 10px;
-  font-size: 0.85rem;
+  padding: 4px 14px;
+  font-size: 0.95rem;
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
 }
 
-/* 合否の印。おだいと同じ場所に出すので、高さはおだい側と揃えておく
-   (揃えないと出るたびに下の内容が跳ねる)。 */
-.judge {
+.question-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* 中身がはみ出しても、下の成績行を押しのけないようにする。 */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* おだいの並び。タイピングソフトのように、今の文字を強調して先を見せる。
+   縦の空きに合わせて字を大きくする(vh を使うので、画面が変われば追従する)。 */
+.prompt-strip {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 56px;
-  font-size: 2.2rem;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 0;
+}
+
+.prompt-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.prompt-item {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  font-size: clamp(1rem, 3.2vh, 1.6rem);
+  border-radius: 8px;
+  color: var(--fg-dim);
+}
+
+.prompt-item.is-now {
+  background: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
+  /* 今のおだいだけ大きく。目で追う先を 1 か所に絞る。 */
+  font-size: clamp(2rem, 9vh, 5rem);
+  padding: 2px 16px;
+}
+
+.prompt-item.is-past {
+  color: var(--fg-faint);
+}
+
+.prompt-sound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prompt-sound .ctl {
+  min-height: clamp(64px, 12vh, 120px);
+  min-width: clamp(100px, 20vh, 180px);
+  font-size: clamp(1.8rem, 6vh, 3.5rem);
+}
+
+.prompt-staff {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+  /* 五線は currentColor で描いてあるので、地の色に合わせて 1 か所で決まる。 */
+  color: var(--fg);
+}
+
+.staff-svg {
+  /* 親の高さに収める。収めないと、狭いときに はみ出して他の行に重なる。 */
+  height: min(100%, 240px);
+  width: auto;
+  max-width: 100%;
+}
+
+/* 合否の印。おだいと同じ場所・同じ大きさで出す。 */
+.judge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: clamp(2.5rem, 11vh, 6rem);
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .judge.is-ok {
@@ -543,83 +667,37 @@ ruby rt {
 }
 
 .judge small {
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: var(--fg-dim);
-}
-
-/* おだいの並び。タイピングソフトのように、今の文字を強調して先を見せる。 */
-.prompt-strip {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 4px 0;
-}
-
-
-.prompt-strip::-webkit-scrollbar {
-  display: none;
-}
-
-.prompt-item {
-  flex: 0 0 auto;
-  padding: 4px 8px;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  color: var(--fg-dim);
-}
-
-.prompt-item.is-now {
-  background: var(--accent);
-  color: var(--accent-ink);
+  font-size: clamp(0.9rem, 2.6vh, 1.4rem);
   font-weight: 700;
-  /* 今のおだいだけ少し大きく。目で追う先を 1 か所に絞る。 */
-  font-size: 1.35rem;
-}
-
-.prompt-item.is-past {
-  color: var(--fg-faint);
-}
-
-.prompt-staff {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  /* 五線は currentColor で描いてあるので、地の色に合わせて 1 か所で決まる。 */
   color: var(--fg);
 }
 
-
-.staff-svg {
-  width: 168px;
-  height: 144px;
+.practice-foot {
   flex: 0 0 auto;
-}
-
-.prompt-sound {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
-
-
-.prompt-sound-note {
-  font-size: 0.78rem;
-  color: var(--fg-dim);
-}
-
 
 .practice-stats {
   display: flex;
   gap: 14px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
 }
 
-
 .practice-stats b {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+}
+
+.practice-foot-sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  min-height: 28px;
 }
 
 .exercise-list {

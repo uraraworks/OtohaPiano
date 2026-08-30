@@ -156,60 +156,69 @@
           </section>
 
           <!-- おとあて(音と音名の対応を覚えるドリル) -->
-          <section class="panel" data-panel="practice" role="tabpanel">
-            <p class="hint">
-              <ruby>出<rt>で</rt></ruby>た おだいの けんばんを おします。やめるまで つづきます。
-              <ruby>弾<rt>ひ</rt></ruby>きかた（<ruby>指<rt>ゆび</rt></ruby>づかい・手の かたち）は
-              あつかいません。<strong>「この音は ド」「ド は この けん」</strong>が
-              わかるように なるための れんしゅうです。
-            </p>
+          <section class="panel practice-panel" data-panel="practice" role="tabpanel">
+            <div class="practice-settings" id="practice-settings">
+              <p class="hint">
+                <ruby>出<rt>で</rt></ruby>た おだいの けんばんを おします。
+                <ruby>弾<rt>ひ</rt></ruby>きかた（<ruby>指<rt>ゆび</rt></ruby>づかい・手の かたち）は
+                あつかいません。<strong>「この音は ド」「ド は この けん」</strong>が
+                わかるように なるための れんしゅうです。
+              </p>
 
-            <!-- おだいの出しかた。文字→鍵 と 音→鍵 のどちらも「音と音名の対応」を作る。
-                 光は位置を教えるだけで音名を覚えないので、いちばん やさしい段としてだけ置く。 -->
-            <div class="metro-row" role="group" aria-label="おだいの出しかた">
-              <span class="label">おだい</span>
-              <button class="ctl mode-btn" data-mode="light" type="button">💡<small>ひかる</small></button>
-              <button class="ctl mode-btn is-on" data-mode="letter" type="button">🔤<small>もじ</small></button>
-              <button class="ctl mode-btn" data-mode="sound" type="button">👂<small>おと</small></button>
-              <button class="ctl mode-btn" data-mode="staff" type="button">🎼<small>おんぷ</small></button>
+              <!-- おだいの出しかた。文字→鍵 と 音→鍵 のどちらも「音と音名の対応」を作る。
+                   光は位置を教えるだけで音名を覚えないので、いちばん やさしい段としてだけ置く。 -->
+              <div class="setting-row" role="group" aria-label="おだいの出しかた">
+                <span class="label">おだい</span>
+                <button class="ctl mode-btn" data-mode="light" type="button">💡<small>ひかる</small></button>
+                <button class="ctl mode-btn is-on" data-mode="letter" type="button">🔤<small>もじ</small></button>
+                <button class="ctl mode-btn" data-mode="sound" type="button">👂<small>おと</small></button>
+                <button class="ctl mode-btn" data-mode="staff" type="button">🎼<small>おんぷ</small></button>
+              </div>
+              <p class="hint" id="mode-hint"></p>
+
+              <!-- 間違えたら終わりにするか。脳トレの「1 問でも間違えたら終わり」と同じ。 -->
+              <div class="setting-row" role="group" aria-label="やりかた">
+                <span class="label">やりかた</span>
+                <button class="ctl rule-btn is-on" data-survival="0" type="button">♾<small>ずっと</small></button>
+                <button class="ctl rule-btn" data-survival="1" type="button">💥<small>1つでも まちがえたら おわり</small></button>
+              </div>
+
+              <!-- 難しさは 2 つの軸に分ける。混ぜると何が難しくなったのか分からなくなる。 -->
+              <div class="setting-row" id="range-row" role="group" aria-label="はんい"></div>
+              <div class="setting-row" id="chord-row" role="group" aria-label="いちどに鳴らす音の数"></div>
+              <p class="hint" id="drill-hint"></p>
             </div>
-            <p class="hint" id="mode-hint"></p>
 
-            <!-- 間違えたら終わりにするか。脳トレの「1 問でも間違えたら終わり」と同じ。 -->
-            <div class="metro-row" role="group" aria-label="やりかた">
-              <span class="label">やりかた</span>
-              <button class="ctl rule-btn is-on" data-survival="0" type="button">♾<small>ずっと</small></button>
-              <button class="ctl rule-btn" data-survival="1" type="button">💥<small>1つでも まちがえたら おわり</small></button>
+            <!-- 押すとこの行が消えて、同じ場所におだいの枠が出る。 -->
+            <div class="start-row" id="start-row">
+              <button class="btn-start" id="btn-start" type="button">スタート</button>
             </div>
 
             <div class="practice-now" id="practice-now" hidden>
               <div class="practice-head">
                 <span class="question-no" id="question-no"></span>
-                <span class="practice-name" id="practice-name"></span>
-                <button class="icon-btn" id="btn-practice-quit" type="button" aria-label="やめる">✕</button>
+                <button class="icon-btn practice-quit" id="btn-practice-quit" type="button" aria-label="やめる">✕</button>
               </div>
 
-              <!-- 合っていたか外れていたかを、次のおだいの前にはっきり出す。
-                   出題そのものと同じ場所に出して、目を動かさずに済むようにする。 -->
-              <div class="judge" id="judge" hidden aria-live="polite"></div>
-
-              <div class="prompt-strip" id="prompt-strip" hidden></div>
-              <div class="prompt-sound" id="prompt-sound" hidden>
-                <button class="ctl big" id="btn-replay" type="button">🔊<small>もういちど</small></button>
-                <span class="prompt-sound-note">どの音か あてて、けんばんを おしてね</span>
+              <!-- おだいと合否は同じ場所に出す。縦の空きいっぱいに広げて、
+                   目を動かさずに読めるようにする。 -->
+              <div class="question-body">
+                <div class="prompt-strip" id="prompt-strip" hidden></div>
+                <div class="prompt-sound" id="prompt-sound" hidden>
+                  <button class="ctl big" id="btn-replay" type="button">🔊<small>もういちど</small></button>
+                </div>
+                <div class="prompt-staff" id="prompt-staff" hidden></div>
+                <div class="judge" id="judge" hidden aria-live="polite"></div>
               </div>
-              <div class="prompt-staff" id="prompt-staff" hidden></div>
 
-              <div class="practice-stats" id="practice-stats"></div>
-              <div class="practice-meta">
-                <span id="practice-best"></span>
-                <button class="ctl" id="btn-practice-hint" type="button">💡<small>ヒント</small></button>
-                <button class="ctl" id="btn-practice-retry" type="button" hidden>↺<small>もういちど</small></button>
+              <div class="practice-foot">
+                <div class="practice-stats" id="practice-stats"></div>
+                <div class="practice-foot-sub">
+                  <span id="practice-best"></span>
+                  <button class="ctl" id="btn-practice-retry" type="button" hidden>↺<small>もういちど</small></button>
+                </div>
               </div>
             </div>
-
-            <h2 class="panel-title">どこまでの <ruby>音<rt>おと</rt></ruby> を 出すか</h2>
-            <ul class="exercise-list" id="drill-list"></ul>
           </section>
 
           <!-- 道具(メトロノーム) -->
