@@ -404,6 +404,9 @@ ruby rt {
 
 .tab {
   flex: 1 1 0;
+  min-width: 0;
+  /* 4 つ並ぶので、狭い側では字を詰めて折り返させない。 */
+  font-size: 0.82rem;
   min-height: 48px;
   border: none;
   border-bottom: 3px solid transparent;
@@ -431,6 +434,126 @@ ruby rt {
 
 .panel.is-on {
   display: flex;
+}
+
+/* ---- れんしゅう -------------------------------------------------------- */
+
+.practice-now {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg-3);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.practice-now[hidden] {
+  display: none;
+}
+
+.practice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.practice-name {
+  flex: 1 1 auto;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.practice-bar {
+  height: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.practice-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.15s;
+}
+
+.practice-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.practice-meta span {
+  flex: 1 1 auto;
+}
+
+.practice-aim {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--fg-dim);
+}
+
+/* 最後まで押し切ったときだけ、短く喜ぶ。 */
+.practice-now.is-done {
+  animation: practice-done 0.5s ease-out 2;
+}
+
+@keyframes practice-done {
+  50% {
+    background: var(--accent);
+  }
+}
+
+.exercise-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--fg);
+  width: 100%;
+}
+
+.exercise-item.is-on {
+  border-color: var(--accent);
+}
+
+.exercise-item .ex-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.exercise-item .ex-aim {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+  margin-top: 2px;
+}
+
+/* 「できた」印。押し切った課題に付く。 */
+.exercise-item .ex-clear {
+  flex: 0 0 auto;
+  font-size: 0.9rem;
 }
 
 .panel-title {

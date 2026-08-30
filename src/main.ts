@@ -33,8 +33,17 @@ import {
   newMemoId,
   type MemoMeta,
 } from "./core/audioMemo.ts";
-import { newId } from "./core/storage.ts";
+import { newId, loadJson, saveJson } from "./core/storage.ts";
 import { isFullscreenSupported, isFullscreenActive, toggleFullscreen, onFullscreenChange } from "./core/fullscreen.ts";
+import {
+  EXERCISES,
+  RANDOM_LEVELS,
+  toNoteEvents,
+  toKeySteps,
+  makeRandomExercise,
+  type Exercise,
+} from "./core/exercises.ts";
+import { GuidedPractice } from "./core/guidedPractice.ts";
 
 /** 型付きで要素を引く。無ければ組み立てのミスなので即座に落とす。 */
 function $<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -81,6 +90,11 @@ let playingTakeId: string | null = null;
 let taps: number[] = [];
 /** 再生中の音声メモ。切り替えのときに前のものを止める。 */
 let memoAudio: HTMLAudioElement | null = null;
+/** 待ちながら進む練習。null なら練習していない。 */
+let practice: GuidedPractice | null = null;
+let practiceExercise: Exercise | null = null;
+/** 押し切った課題の id。次に開いたときも「できた」印を残す。 */
+let clearedExercises = new Set<string>(loadJson<string[]>("cleared", []));
 
 const keyboard = new Keyboard($("keyboard"), {
   startMidi,
@@ -88,6 +102,8 @@ const keyboard = new Keyboard($("keyboard"), {
   onNoteOn: (midi) => {
     synth.noteOn(midi);
     if (recordingKeys) keyRecorder.noteOn(midi, recordTime());
+    // 練習中は、押した鍵が「次の音」かどうかを見て進める。
+    if (practice) onPracticePress(midi);
   },
   onNoteOff: (midi) => {
     synth.noteOff(midi);
@@ -153,6 +169,7 @@ $("start-button").addEventListener("click", () => {
     renderMemos();
     renderInstruments();
     renderMetroLamps();
+    renderExercises();
     updateOctaveLabel();
   })();
 });
@@ -821,4 +838,159 @@ window.addEventListener("pagehide", () => {
   memoRecorder.cancel();
   synth.allNotesOff();
   metronome.stop();
+});
+
+// ---- れんしゅう（入門の練習課題） --------------------------------------------
+
+/**
+ * 課題の音は鍵盤の左端を「ド」として組み立てる。
+ * オクターブを動かしても課題が画面の外へ出ないようにするため、
+ * 絶対音高ではなく今の鍵盤の位置から決める。
+ */
+function practiceBase(): number {
+  return keyboard.getStartMidi();
+}
+
+function renderExercises(): void {
+  const list = $("exercise-list");
+  list.innerHTML = "";
+  for (const ex of EXERCISES) {
+    list.appendChild(
+      exerciseButton(ex.name, ex.aim, clearedExercises.has(ex.id), ex.id === practiceExercise?.id, () =>
+        startPractice(ex),
+      ),
+    );
+  }
+
+  const rlist = $("random-list");
+  rlist.innerHTML = "";
+  for (const level of RANDOM_LEVELS) {
+    rlist.appendChild(
+      exerciseButton(level.name, level.aim, false, false, () => {
+        // 出題は毎回作り直す。並びを覚えてしまわないための課題なので、使い回さない。
+        startPractice(makeRandomExercise(level, 12, Math.random));
+      }),
+    );
+  }
+}
+
+function exerciseButton(
+  name: string,
+  aim: string,
+  cleared: boolean,
+  active: boolean,
+  onClick: () => void,
+): HTMLElement {
+  const li = document.createElement("li");
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "exercise-item" + (active ? " is-on" : "");
+
+  const label = document.createElement("span");
+  label.className = "ex-name";
+  label.textContent = name;
+  const sub = document.createElement("small");
+  sub.className = "ex-aim";
+  sub.textContent = aim;
+  label.appendChild(sub);
+
+  const mark = document.createElement("span");
+  mark.className = "ex-clear";
+  mark.textContent = cleared ? "⭐" : "";
+
+  btn.append(label, mark);
+  btn.addEventListener("click", onClick);
+  li.appendChild(btn);
+  return li;
+}
+
+function startPractice(ex: Exercise): void {
+  // 動画のお手本と練習が同時に鍵盤を光らせると、どちらの光か分からなくなる。
+  stopTakePlayback();
+  practiceExercise = ex;
+  practice = new GuidedPractice(toKeySteps(ex, practiceBase()));
+  $("practice-now").hidden = false;
+  $("practice-now").classList.remove("is-done");
+  $("practice-name").textContent = ex.name;
+  $("practice-aim").textContent = ex.aim;
+  showPracticeGuide();
+  updatePracticeProgress();
+  renderExercises();
+}
+
+function stopPractice(): void {
+  practice = null;
+  practiceExercise = null;
+  keyboard.clearGuide();
+  $("practice-now").hidden = true;
+  renderExercises();
+}
+
+/** 今 押すべき鍵だけを光らせる。押せた音は消して、残りが分かるようにする。 */
+function showPracticeGuide(): void {
+  keyboard.clearGuide();
+  if (!practice) return;
+  for (const midi of practice.remaining) keyboard.setGuide(midi, true);
+}
+
+function updatePracticeProgress(): void {
+  if (!practice) return;
+  const { step, total } = practice.progress;
+  $("practice-step").textContent = `${step} / ${total}`;
+  const done = practice.done ? total : step - 1;
+  $<HTMLElement>("practice-fill").style.width = `${total === 0 ? 0 : (done / total) * 100}%`;
+}
+
+function onPracticePress(midi: number): void {
+  // 終わったあとの打鍵は、ただ音が鳴るだけにする。
+  // 塞がないと、押すたびに「できました！」が出てしまう。
+  if (!practice || practice.done) return;
+  const result = practice.press(midi);
+  if (result.kind === "wrong") {
+    // 責めない。進まないことが、そのまま「ちがう」の合図になる。
+    return;
+  }
+  showPracticeGuide();
+  updatePracticeProgress();
+  if (result.kind === "done") finishPractice();
+}
+
+function finishPractice(): void {
+  const ex = practiceExercise;
+  keyboard.clearGuide();
+  $("practice-now").classList.add("is-done");
+  if (ex && !ex.id.startsWith("random-")) {
+    clearedExercises.add(ex.id);
+    saveJson("cleared", [...clearedExercises]);
+  }
+  toast("できました！");
+  renderExercises();
+}
+
+$("btn-practice-quit").addEventListener("click", () => stopPractice());
+
+$("btn-practice-again").addEventListener("click", () => {
+  if (!practiceExercise) return;
+  startPractice(practiceExercise);
+});
+
+// お手本を聞く。課題を打鍵記録と同じ形へ展開して、既存の再生に渡すだけでよい。
+$("btn-practice-listen").addEventListener("click", () => {
+  const ex = practiceExercise;
+  if (!ex) return;
+  keyboard.clearGuide();
+  const events = toNoteEvents(ex, practiceBase(), metronome.getBpm());
+  // 最後の音が鳴り終わるまでを長さにする(at だけだと最後の音が切れる)。
+  const last = events[events.length - 1];
+  const duration = last ? last.at + last.dur : 0;
+  const take = makeTake(ex.name, null, synth.getInstrument().id, events, duration);
+  takePlayback.setSounding(true);
+  takePlayback.setLighting(true);
+  takePlayback.startStandalone(take, 1);
+  // 聞き終わったら、押すべき鍵の表示へ戻す。
+  const back = window.setInterval(() => {
+    if (takePlayback.playing) return;
+    window.clearInterval(back);
+    showPracticeGuide();
+  }, 200);
 });

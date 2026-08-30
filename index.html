@@ -90,6 +90,7 @@
               🎬 <ruby>曲<rt>きょく</rt></ruby>
             </button>
             <button class="tab" data-tab="takes" type="button" role="tab">✨ おてほん</button>
+            <button class="tab" data-tab="practice" type="button" role="tab">🎯 れんしゅう</button>
             <button class="tab" data-tab="tools" type="button" role="tab">
               🥁 <ruby>道具<rt>どうぐ</rt></ruby>
             </button>
@@ -152,6 +153,39 @@
               <ruby>端末<rt>たんまつ</rt></ruby>の 中だけに ほぞんされます。
             </p>
             <ul class="memo-list" id="memo-list"></ul>
+          </section>
+
+          <!-- れんしゅう(入門の練習課題) -->
+          <section class="panel" data-panel="practice" role="tabpanel">
+            <p class="hint">
+              <ruby>曲<rt>きょく</rt></ruby>ではなく、<ruby>指<rt>ゆび</rt></ruby>の
+              <ruby>動<rt>うご</rt></ruby>かしかたの れんしゅうです。
+              <ruby>光<rt>ひか</rt></ruby>った けんばんを おすと つぎへ すすみます。
+              まちがえても すすまないだけなので、あわてなくて だいじょうぶ。
+            </p>
+
+            <div class="practice-now" id="practice-now" hidden>
+              <div class="practice-head">
+                <span class="practice-name" id="practice-name"></span>
+                <button class="icon-btn" id="btn-practice-quit" type="button" aria-label="やめる">✕</button>
+              </div>
+              <div class="practice-bar"><span class="practice-fill" id="practice-fill"></span></div>
+              <div class="practice-meta">
+                <span id="practice-step">1 / 1</span>
+                <button class="ctl" id="btn-practice-listen" type="button">👂<small>きく</small></button>
+                <button class="ctl" id="btn-practice-again" type="button">↺<small>やりなおす</small></button>
+              </div>
+              <p class="practice-aim" id="practice-aim"></p>
+            </div>
+
+            <h2 class="panel-title">じゅんばんに</h2>
+            <ul class="exercise-list" id="exercise-list"></ul>
+
+            <h2 class="panel-title">ランダム（<ruby>音<rt>おと</rt></ruby>あてゲーム）</h2>
+            <p class="hint">
+              まいかい ちがう おだいが 出ます。ならびを おぼえてしまわないための れんしゅうです。
+            </p>
+            <ul class="exercise-list" id="random-list"></ul>
           </section>
 
           <!-- 道具(メトロノーム) -->
