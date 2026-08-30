@@ -6,25 +6,33 @@ const C4 = 60;
 
 describe("パソコンのキーの対応", () => {
   it("ホームポジションの段が ド から ソ まで並ぶ", () => {
-    const row = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "BracketRight"];
+    const row = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "Backslash"];
     const names = row.map((code) => noteNameJa(midiForKey(code, C4)!));
     expect(names).toEqual(["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド", "レ", "ミ", "ファ", "ソ"]);
   });
 
   it("ホームポジションの段はすべて白鍵", () => {
-    const row = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "BracketRight"];
+    const row = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote", "Backslash"];
     for (const code of row) expect(isBlackKey(midiForKey(code, C4)!)).toBe(false);
   });
 
   it("上の段はすべて黒鍵", () => {
-    const row = ["KeyW", "KeyE", "KeyT", "KeyY", "KeyU", "KeyO", "KeyP", "BracketLeft"];
+    const row = ["KeyW", "KeyE", "KeyT", "KeyY", "KeyU", "KeyO", "KeyP", "BracketRight"];
     for (const code of row) expect(isBlackKey(midiForKey(code, C4)!)).toBe(true);
   });
 
   it("黒鍵の無いところ（ミとファの間・シとドの間）は割り当てない", () => {
-    // R と I を飛ばしてあるので、上の段の並びが鍵盤の見た目と重なる。
+    // R・I・@ を飛ばしてあるので、上の段の並びが鍵盤の見た目と重なる。
     expect(midiForKey("KeyR", C4)).toBeNull();
     expect(midiForKey("KeyI", C4)).toBeNull();
+    expect(midiForKey("BracketLeft", C4)).toBeNull(); // JIS の「@」
+  });
+
+  it("JIS の刻印どおりに鳴る（] が ソ、[ が ファ♯）", () => {
+    // JIS では code と刻印の対応が US とずれる。ここを取り違えると
+    // 「] が鳴らず、[ がソになる」ことになる（実際になった）。
+    expect(noteNameJa(midiForKey("Backslash", C4)!)).toBe("ソ"); // JIS の「]」
+    expect(noteNameJa(midiForKey("BracketRight", C4)!)).toBe("ファ♯"); // JIS の「[」
   });
 
   it("鍵盤の左端を動かすと、鳴る音も一緒に動く", () => {

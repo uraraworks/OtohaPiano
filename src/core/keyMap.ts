@@ -3,17 +3,23 @@
 // タブレットが主なので、これは大人向けの隠し機能。画面には出していない。
 //
 // キーの判定に event.key ではなく event.code を使う。code は「キーの物理的な位置」
-// なので、JIS と US で刻印が違っても同じ場所のキーが同じ音になる。
-//   JIS: A S D F G H J K L ; : 」
-//   US : A S D F G H J K L ; ' ]
-// event.key で見ると、この右端 3 つが配列ごとに別の文字になって揃わない。
+// なので、押した場所と鳴る音が一対一で決まる。
+//
+// 割り当ては JIS 配列（日本語キーボード）の刻印に合わせてある。
+// JIS では code と刻印の対応が US とずれていて、ここを取り違えると
+// 「] が鳴らず、[ がソになる」ことになる（実際になった）。
+//   JIS: ] = Backslash / [ = BracketRight / @ = BracketLeft / : = Quote
+//   US : ] = BracketRight / [ = BracketLeft / ' = Quote
 //
 // 白鍵をホームポジションの段（ド から ソ まで 12 個）、黒鍵をその上の段に置く。
 // ミとファの間、シとドの間には黒鍵が無いので、上の段もその位置を空ける
-// （R と I を飛ばす）。見た目が鍵盤の並びと重なるので、指が迷わない。
+// （R・I・@ を飛ばす）。JIS ではキーの並びが鍵盤の見た目とそのまま重なる。
 //
-//   黒鍵    W E   T Y U   O P     [
-//   白鍵   A S D F G H J K L ; : ]
+//   黒鍵     W E   T Y U   O P   [
+//   白鍵    A S D F G H J K L ; : ]
+//
+// US 配列で使うと右端 2 つの刻印だけ変わる（] のかわりに \、[ のかわりに ]）。
+// 位置は同じなので、指の動きは変わらない。
 
 /** キーの物理位置 → 鍵盤の左端（ド）からの半音差。 */
 const KEY_TO_SEMITONE: Record<string, number> = {
@@ -29,7 +35,8 @@ const KEY_TO_SEMITONE: Record<string, number> = {
   KeyL: 14,
   Semicolon: 16,
   Quote: 17,
-  BracketRight: 19,
+  // JIS の「]」。US では Enter の上の「\」にあたる。
+  Backslash: 19,
   // 黒鍵。
   KeyW: 1,
   KeyE: 3,
@@ -38,7 +45,8 @@ const KEY_TO_SEMITONE: Record<string, number> = {
   KeyU: 10,
   KeyO: 13,
   KeyP: 15,
-  BracketLeft: 18,
+  // JIS の「[」。US では「]」にあたる。
+  BracketRight: 18,
 };
 
 /**
