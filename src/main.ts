@@ -187,6 +187,9 @@ $("start-button").addEventListener("click", () => {
     player.onStatus = (s) => {
       $("btn-play").textContent = s === "playing" ? "⏸" : "▶";
     };
+    // 最初の 1 音目で弦の計算が走ると、そのときだけ音が遅れる。
+    // 画面に出ている範囲を先に作っておく。
+    synth.warmUp(startMidi, 25);
     renderLibrary();
     renderTakes();
     renderMemos();

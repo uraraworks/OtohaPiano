@@ -7,6 +7,7 @@
 //   差し替えるときはこのファイルの play/stop を保ったまま中身だけ替えればよい。
 
 import { midiToFreq } from "./notes.ts";
+import { renderString, pianoStringOptions } from "./stringVoice.ts";
 
 /** 1 つの倍音。 */
 export interface Partial {
@@ -51,6 +52,14 @@ export interface Instrument {
   decayTracksPitch?: boolean;
   /** 打鍵の瞬間に混ぜる音(ハンマーが弦を叩く音)。0〜1。 */
   hammer?: number;
+  /**
+   * 音の作り方。
+   *   additive … 倍音を足して作る。オルガン系や金属の響きはこれで足りる
+   *   string   … 弦の振動を計算する。ピアノはこちら。倍音を足す方式では
+   *              弦が複数本あることや打鍵直後の複雑な音を作れず、
+   *              どうしても電子ピアノの音になる
+   */
+  synthesis?: "additive" | "string";
 }
 
 /**
@@ -75,14 +84,15 @@ export const INSTRUMENTS: Instrument[] = [
     // グランドピアノ。倍音は正弦波で積み、上へ行くほど弱く・速く消えるようにする。
     // 波形そのもの(三角波など)で作ると倍音の減衰を個別に制御できず、
     // 減衰しても音色が変わらない=電子オルガンのような響きになる。
-    partials: harmonics([1.0, 0.52, 0.33, 0.21, 0.14, 0.09, 0.06, 0.04, 0.028, 0.018], 0.45),
-    attack: 0.002,
-    decay: 2.8,
-    sustain: 0.0,
-    release: 0.22,
-    inharmonicity: 0.0006,
-    decayTracksPitch: true,
-    hammer: 0.5,
+    // 弦の振動そのものを計算する。倍音を足す方式では、1 音に弦が 2〜3 本あって
+    // 互いにずれて唸ることや、打鍵直後の複雑な音が作れない。
+    synthesis: "string",
+    partials: [],
+    attack: 0.001,
+    decay: 0,
+    sustain: 0,
+    // 離鍵はダンパーが弦を止める動き。ピアノは速い。
+    release: 0.14,
   },
   {
     id: "organ",
@@ -141,6 +151,8 @@ interface Voice {
   gain: GainNode;
   /** 離鍵処理を二重に走らせないための印。 */
   releasing: boolean;
+  /** 弦モデルのとき、鳴らしている波形。 */
+  source?: AudioBufferSourceNode;
 }
 
 export class Synth {
@@ -155,6 +167,8 @@ export class Synth {
   private volume = 0.7;
   /** 打鍵音に使う雑音。1 つ作って使い回す。 */
   private noiseBuffer: AudioBuffer | null = null;
+  /** 弦の波形。音の高さごとに 1 回だけ計算して使い回す。 */
+  private stringCache = new Map<number, AudioBuffer>();
 
   /**
    * 音声を解禁する。ブラウザの自動再生制限があるため、
@@ -184,6 +198,15 @@ export class Synth {
   setInstrument(id: string): void {
     const found = INSTRUMENTS.find((i) => i.id === id);
     if (found) this.instrument = found;
+  }
+
+  /**
+   * よく使う範囲の弦の波形を先に作っておく。
+   * 最初の 1 音目で計算が走ると、そのときだけ音が遅れて出る。
+   */
+  warmUp(fromMidi: number, count: number): void {
+    if (this.instrument.synthesis !== "string") return;
+    for (let m = fromMidi; m < fromMidi + count; m++) this.stringBuffer(m);
   }
 
   getInstrument(): Instrument {
@@ -238,12 +261,62 @@ export class Synth {
     src.stop(t0 + 0.06);
   }
 
+  /**
+   * 弦の波形を用意する。音の高さごとに 1 回だけ計算し、以降は使い回す。
+   * 生成は数ミリ秒。初めてその鍵を押したときだけ走る。
+   */
+  private stringBuffer(midi: number): AudioBuffer | null {
+    const ctx = this.ctx;
+    if (!ctx) return null;
+    const cached = this.stringCache.get(midi);
+    if (cached) return cached;
+    // 乱数は音の高さから決める。同じ鍵はいつも同じ音になり、
+    // 連打しても音色がちらつかない。
+    let seed = midi * 2654435761;
+    const rng = (): number => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    const wave = renderString(pianoStringOptions(midi, ctx.sampleRate, rng));
+    const buf = ctx.createBuffer(1, wave.length, ctx.sampleRate);
+    // copyToChannel は SharedArrayBuffer 由来の配列を受け取れない型になっている。
+    // 生成側は通常の Float32Array なので、そのまま書き写す。
+    buf.getChannelData(0).set(wave);
+    this.stringCache.set(midi, buf);
+    return buf;
+  }
+
+  /** 弦モデルで鳴らす。 */
+  private noteOnString(midi: number, velocity: number): void {
+    const ctx = this.ctx;
+    const master = this.master;
+    if (!ctx || !master) return;
+    const buf = this.stringBuffer(midi);
+    if (!buf) return;
+
+    const t0 = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    // 高い音ほど耳につくので、上に行くほど少し絞る。
+    const tilt = Math.pow(0.5, Math.max(0, midi - 60) / 36);
+    gain.gain.value = 0.5 * velocity * tilt;
+    src.connect(gain);
+    gain.connect(master);
+    src.start(t0);
+    this.voices.set(midi, { osc: [], gain, releasing: false, source: src });
+  }
+
   /** 鍵を押す。velocity は 0〜1。 */
   noteOn(midi: number, velocity = 1): void {
     const ctx = this.ctx;
     const master = this.master;
     if (!ctx || !master) return;
     this.noteOff(midi, true);
+    if (this.instrument.synthesis === "string") {
+      this.noteOnString(midi, velocity);
+      return;
+    }
 
     const inst = this.instrument;
     const t0 = ctx.currentTime;
@@ -308,6 +381,7 @@ export class Synth {
     v.gain.gain.setValueAtTime(Math.max(v.gain.gain.value, 0.0001), t0);
     v.gain.gain.exponentialRampToValueAtTime(0.0001, t0 + rel);
     for (const o of v.osc) o.stop(t0 + rel + 0.02);
+    v.source?.stop(t0 + rel + 0.02);
     // ramp が終わってから切り離す。早すぎるとプツッと切れる。
     setTimeout(() => v.gain.disconnect(), (rel + 0.1) * 1000);
   }
