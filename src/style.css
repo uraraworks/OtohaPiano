@@ -1131,6 +1131,12 @@ ruby rt {
   flex-wrap: wrap;
 }
 
+/* オクターブの操作は右端に置く。楽器の選択を出していない今も、
+   出すようになった後も、同じ位置に来るようにしておく。 */
+.keys-toolbar > :last-child {
+  margin-left: auto;
+}
+
 .oct-label {
   min-width: 3em;
   text-align: center;

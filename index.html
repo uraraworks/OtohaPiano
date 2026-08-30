@@ -313,7 +313,11 @@
 
       <div class="keys-area">
         <div class="keys-toolbar">
-          <span class="ctl-group" id="instrument-group" role="group" aria-label="楽器"></span>
+          <!-- 楽器の選択は当面出さない。今のピアノの音のまま使う。
+               より良い音色の作り方が決まってから戻す。仕組み(synth.ts の
+               INSTRUMENTS と renderInstruments)はそのまま残してあるので、
+               この hidden を外せば元に戻る。 -->
+          <span class="ctl-group" id="instrument-group" role="group" aria-label="楽器" hidden></span>
           <span class="ctl-group">
             <button class="ctl" id="btn-oct-down" type="button">◀<small>ひくく</small></button>
             <span class="oct-label" id="oct-label">C4</span>
