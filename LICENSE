@@ -19,3 +19,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+This MIT license applies to the source code of this project.
+
+The piano audio samples in `public/audio/piano/*.mp3` are NOT covered by the
+MIT license. They are the Salamander Grand Piano by Alexander Holm, licensed
+under Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+See `public/audio/piano/credits.html` and `public/audio/piano/LICENSE.txt`.

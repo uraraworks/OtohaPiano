@@ -32,9 +32,14 @@
       <button id="start-button" class="start-button" type="button">
         <ruby>始<rt>はじ</rt></ruby>める
       </button>
+      <p id="start-status" role="status" class="start-note"></p>
       <p class="start-note">
         <ruby>音<rt>おと</rt></ruby>が<ruby>出<rt>で</rt></ruby>ます。
         <ruby>音量<rt>おんりょう</rt></ruby>を<ruby>確<rt>たし</rt></ruby>かめてね。
+      </p>
+      <p class="start-note start-credit">
+        ピアノの<ruby>音<rt>おと</rt></ruby>：Salamander Grand Piano（Alexander Holm・CC BY 3.0）
+        <a href="./audio/piano/credits.html" target="_blank" rel="noopener">くわしく</a>
       </p>
     </div>
 
@@ -51,6 +56,7 @@
     </header>
 
     <main class="app" id="app" hidden>
+      <p id="piano-fallback" role="status" hidden>ピアノの おとを よみこめなかったため、かわりの おとで なります。ページを ひらきなおすと、もういちど よみこめます。</p>
       <section class="stage">
         <div class="video-pane is-empty">
           <!-- 映像は必ず出す(音だけの再生は利用規約で不可。原体験も「見ながら弾く」)。 -->

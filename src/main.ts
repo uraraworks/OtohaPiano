@@ -175,10 +175,21 @@ if (isFullscreenSupported()) {
 
 $("start-button").addEventListener("click", () => {
   void (async () => {
+    const button = $<HTMLButtonElement>("start-button");
+    if (button.disabled) return;
+    button.disabled = true;
+    $("start-status").textContent = "ピアノの おとを よみこんでいます…";
     // ここがユーザー操作の中。以降 Web Audio が使えるようになる。
-    await synth.unlock();
+    try {
+      await synth.unlock();
+    } catch {
+      button.disabled = false;
+      $("start-status").textContent = "おとを はじめられませんでした。もういちど おしてね。";
+      return;
+    }
     $("start-overlay").hidden = true;
     $<HTMLElement>("app").hidden = false;
+    $("piano-fallback").hidden = synth.pianoReady;
     try {
       await player.mount($("player-mount"));
     } catch {
@@ -895,6 +906,7 @@ for (const btn of document.querySelectorAll<HTMLElement>(".beats")) {
 const pressedKeys = new Map<string, number>();
 
 window.addEventListener("keydown", (e) => {
+  if (!synth.ready || $("app").hidden) return;
   if (!shouldPlayKey(e)) return;
   const midi = midiForKey(e.code, keyboard.getStartMidi());
   if (midi === null) return;

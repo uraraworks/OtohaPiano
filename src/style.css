@@ -149,7 +149,31 @@ ruby rt {
 }
 
 .start-note {
+  /* 親が align-items:center の flex なので、長い行は max-width を切らないと
+     ビューポートをはみ出す。iPhone 幅での見切れ対策。 */
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 16px;
   margin: 12px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  text-align: center;
+  color: var(--fg-dim);
+}
+
+/* 音源クレジット（CC BY 3.0 の表示義務）。常に出すが主張は控えめにする。 */
+.start-credit {
+  max-width: 30rem;
+  margin-top: 16px;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+#start-status:empty { display: none; }
+.start-button:disabled { cursor: wait; }
+#piano-fallback {
+  margin: 0;
+  padding: 6px 12px;
   font-size: 0.85rem;
   color: var(--fg-dim);
 }

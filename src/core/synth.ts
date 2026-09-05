@@ -1,12 +1,8 @@
-// 音源。Web Audio だけで音を合成する。
-//
-// なぜサンプル音源(サウンドフォント)を使わないか:
-//   企画の柱が「完全静的・サーバー不要・権利問題なし」。サウンドフォントは
-//   数 MB の外部ファイル + ライセンス確認が要る。プロトタイプの目的は
-//   「押したら鳴る」の手触りを確かめることなので、まず合成音で通す。
-//   差し替えるときはこのファイルの play/stop を保ったまま中身だけ替えればよい。
+// ピアノは同梱した Salamander の録音を再生する。
+// 他の楽器と、音源取得に失敗した場合の代替音は Web Audio で合成する。
 
 import { midiToFreq } from "./notes.ts";
+import { loadPianoSamples, pianoSampleFor } from "./pianoSamples.ts";
 
 /** 倍音の並びと包絡線で楽器の音色を作る。 */
 export interface Instrument {
@@ -73,8 +69,9 @@ export const INSTRUMENTS: Instrument[] = [
 ];
 
 interface Voice {
-  osc: OscillatorNode[];
+  osc: AudioScheduledSourceNode[];
   gain: GainNode;
+  release: number;
   /** 離鍵処理を二重に走らせないための印。 */
   releasing: boolean;
 }
@@ -89,6 +86,12 @@ export class Synth {
   private voices = new Map<number, Voice>();
   private instrument: Instrument = INSTRUMENTS[0]!;
   private volume = 0.7;
+  private pianoBuffers = new Map<number, AudioBuffer>();
+  private loading: Promise<void> | null = null;
+
+  get pianoReady(): boolean {
+    return this.pianoBuffers.size > 0;
+  }
 
   /**
    * 音声を解禁する。ブラウザの自動再生制限があるため、
@@ -104,10 +107,18 @@ export class Synth {
       this.master.connect(this.ctx.destination);
     }
     if (this.ctx.state === "suspended") await this.ctx.resume();
+    if (!this.pianoReady) {
+      this.loading ??= loadPianoSamples(this.ctx)
+        .then((buffers) => { this.pianoBuffers = buffers; })
+        // 回線不調でも鍵盤を使えるよう、従来の合成音にフォールバックする。
+        .catch(() => {})
+        .finally(() => { this.loading = null; });
+      await this.loading;
+    }
   }
 
   get ready(): boolean {
-    return this.ctx !== null && this.ctx.state === "running";
+    return this.ctx !== null && this.ctx.state === "running" && this.loading === null;
   }
 
   /** 打鍵記録の時刻の基準に使う。unlock 前は 0。 */
@@ -138,7 +149,32 @@ export class Synth {
     const ctx = this.ctx;
     const master = this.master;
     if (!ctx || !master) return;
+    if (!Number.isFinite(midi) || !Number.isFinite(velocity)) return;
     this.noteOff(midi, true);
+    velocity = Math.max(0, Math.min(1, velocity));
+    if (velocity === 0) return;
+
+    if (this.instrument.id === "piano" && this.pianoReady) {
+      const sample = pianoSampleFor(midi);
+      const source = ctx.createBufferSource();
+      source.buffer = this.pianoBuffers.get(sample.midi)!;
+      source.playbackRate.value = 2 ** ((midi - sample.midi) / 12);
+      const gain = ctx.createGain();
+      // 録音そのものに含まれる打鍵・減衰を残す。合成音の包絡線は重ねない。
+      gain.gain.value = 0.8 * velocity;
+      source.connect(gain);
+      gain.connect(master);
+      const voice: Voice = { osc: [source], gain, release: 0.35, releasing: false };
+      source.onended = () => {
+        source.disconnect();
+        gain.disconnect();
+        // 連打後に前の音が終わっても、新しい音の管理を消さない。
+        if (this.voices.get(midi) === voice) this.voices.delete(midi);
+      };
+      this.voices.set(midi, voice);
+      source.start();
+      return;
+    }
 
     const inst = this.instrument;
     const t0 = ctx.currentTime;
@@ -166,9 +202,10 @@ export class Synth {
       o.connect(g);
       g.connect(gain);
       o.start(t0);
+      o.onended = () => { o.disconnect(); g.disconnect(); };
       osc.push(o);
     }
-    this.voices.set(midi, { osc, gain, releasing: false });
+    this.voices.set(midi, { osc, gain, release: inst.release, releasing: false });
   }
 
   /**
@@ -183,7 +220,7 @@ export class Synth {
     this.voices.delete(midi);
 
     const t0 = ctx.currentTime;
-    const rel = immediate ? 0.01 : this.instrument.release;
+    const rel = immediate ? 0.01 : v.release;
     v.gain.gain.cancelScheduledValues(t0);
     v.gain.gain.setValueAtTime(Math.max(v.gain.gain.value, 0.0001), t0);
     v.gain.gain.exponentialRampToValueAtTime(0.0001, t0 + rel);
