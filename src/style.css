@@ -169,6 +169,11 @@ ruby rt {
   opacity: 0.85;
 }
 
+/* 作品名とライセンス名の途中で改行させない。狭い画面では塊の境目で折り返す。 */
+.start-credit .nb {
+  white-space: nowrap;
+}
+
 #start-status:empty { display: none; }
 .start-button:disabled { cursor: wait; }
 #piano-fallback {
