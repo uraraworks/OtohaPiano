@@ -700,7 +700,10 @@ ruby rt {
 
 .question-body {
   flex: 1 1 auto;
-  min-height: 0;
+  /* 縦が狭い端末だと question-body が数pxまで潰れ、親の高さに合わせている
+     五線や大きな文字、判定の印が消えてしまう。パネル側は overflow-y: auto で
+     スクロールできるので、ここでは潰さずに最低限の高さを確保しておく。 */
+  min-height: 150px;
   /* 中身がはみ出しても、下の成績行を押しのけないようにする。 */
   overflow: hidden;
   display: flex;
