@@ -88,5 +88,8 @@ export function renderStaff(midis: number[], baseMidi: number): string {
     if (needsSharp(midi)) parts.push(sharp(NOTE_X - 18, y));
   }
 
-  return `<svg class="staff-svg" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img" aria-label="音符">${parts.join("")}</svg>`;
+  // viewBox だけだと SVG に内在サイズが無く、Safari は width: auto を 0 に
+  // してしまう（幅を決める手がかりが無いため）。実表示サイズは CSS 側で
+  // 上書きするが、ここでも内在サイズとして width/height を持たせておく。
+  return `<svg class="staff-svg" viewBox="0 0 ${WIDTH} ${HEIGHT}" width="${WIDTH}" height="${HEIGHT}" role="img" aria-label="音符">${parts.join("")}</svg>`;
 }

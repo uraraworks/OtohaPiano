@@ -703,7 +703,8 @@ ruby rt {
   /* 縦が狭い端末だと question-body が数pxまで潰れ、親の高さに合わせている
      五線や大きな文字、判定の印が消えてしまう。パネル側は overflow-y: auto で
      スクロールできるので、ここでは潰さずに最低限の高さを確保しておく。 */
-  min-height: 150px;
+  /* .staff-svg の height が最大 20vh まで育つため、縦の長い端末に合わせて余裕を持たせる。 */
+  min-height: 170px;
   /* 中身がはみ出しても、下の成績行を押しのけないようにする。 */
   overflow: hidden;
   display: flex;
@@ -803,16 +804,27 @@ ruby rt {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  /* height: 100% ではなく stretch にする。親の question-body は高さが
+     未確定（min-height 由来）なことがあり、Safari は未確定の親への
+     パーセント高さを解けずに 0 にしてしまう。stretch なら flex が
+     確定済みの高さとして配ってくれる。 */
+  align-self: stretch;
   min-height: 0;
   /* 五線は currentColor で描いてあるので、地の色に合わせて 1 か所で決まる。 */
   color: var(--fg);
 }
 
 .staff-svg {
-  /* 親の高さに収める。収めないと、狭いときに はみ出して他の行に重なる。 */
-  height: min(100%, 240px);
+  /* 親の高さに収める。収めないと、狭いときに はみ出して他の行に重なる。
+     以前は height: min(100%, 240px) だったが、Safari では親(.question-body)
+     の高さが未確定でパーセントが解けず、五線が丸ごと消える不具合が iPhone で
+     見つかった。vh は常に確定値なので % を使わずに書く。 */
+  height: clamp(120px, 20vh, 240px);
   width: auto;
+  /* width: auto は viewBox の比率から幅を推測させる書き方だが、Safari は
+     内在サイズが無いと 0 と判断することがあるため、比率を明示しておく。
+     この数値は src/ui/staff.ts の WIDTH / HEIGHT と一致させること。 */
+  aspect-ratio: 140 / 120;
   max-width: 100%;
 }
 
