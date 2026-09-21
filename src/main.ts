@@ -4,7 +4,7 @@
 import "./style.css";
 import { Synth, INSTRUMENTS } from "./core/synth.ts";
 import { Keyboard } from "./ui/keyboard.ts";
-import { MIDI_DEFAULT_START, noteNameEn, noteNameJa, octaveStartCandidates } from "./core/notes.ts";
+import { MIDI_DEFAULT_START, noteNameEn, noteNameJa, octaveStartCandidates, firstCFrom } from "./core/notes.ts";
 import { VideoPlayer } from "./core/youtubePlayer.ts";
 import { parseVideoId, parseStartSeconds, thumbnailUrl, formatTime } from "./core/youtubeUrl.ts";
 import {
@@ -35,7 +35,7 @@ import {
 } from "./core/audioMemo.ts";
 import { newId, loadJson, saveJson } from "./core/storage.ts";
 import { isFullscreenSupported, isFullscreenActive, toggleFullscreen, onFullscreenChange } from "./core/fullscreen.ts";
-import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, makeDrillSteps, type RangeOption } from "./core/drills.ts";
+import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, drillWhiteKeys, makeDrillSteps, type RangeOption } from "./core/drills.ts";
 import { renderStaff } from "./ui/staff.ts";
 import { icon, mountIcons } from "./ui/icons.ts";
 import { midiForKey, shouldPlayKey } from "./core/keyMap.ts";
@@ -979,16 +979,18 @@ const MODE_HINTS: Record<PromptMode, string> = {
 const DRILL_CHUNK = 12;
 
 /**
- * 出題は鍵盤の左端を起点に、白鍵を左から数えて作る。
- * オクターブを動かしても、答えの鍵が画面の外へ出ないようにするため。
+ * 出題の起点。鍵盤はファ始まりだが、出題はドから始める
+ * (五線でドは加線 1 本の上に来て、いちばん読みやすい)。
+ * オクターブを動かしても答えの鍵が画面の外へ出ないよう、
+ * 起点は必ず画面内にあるドにする。
  */
 function drillBase(): number {
-  return keyboard.getStartMidi();
+  return firstCFrom(keyboard.getStartMidi());
 }
 
-/** 今の設定で使う白鍵の数。「ぜんぶ」は画面に出ている鍵盤に従う。 */
+/** 今の設定で使う白鍵の数。「ぜんぶ」は ド から画面の右端までに従う。 */
 function currentPoolSize(): number {
-  return poolSizeOf(rangeOption, whiteCount);
+  return poolSizeOf(rangeOption, drillWhiteKeys(startMidi, whiteCount));
 }
 
 /** 記録は「はんい × いちどに」ごとに分ける。条件が違えば別の記録として扱う。 */

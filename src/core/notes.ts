@@ -32,6 +32,15 @@ export function isBlackKey(midi: number): boolean {
   return IS_BLACK[((midi % 12) + 12) % 12]!;
 }
 
+/**
+ * midi 以上で、いちばん近い ド。おとあての出題の起点に使う。
+ * 鍵盤の見た目はファ始まりのままだが、出題は必ずドから数える(五線の読みやすさのため)。
+ */
+export function firstCFrom(midi: number): number {
+  const pc = ((midi % 12) + 12) % 12;
+  return pc === 0 ? midi : midi + (12 - pc);
+}
+
 /** MIDI 番号 → "C4" 形式。オクターブ番号は科学的表記(中央のドが C4)。 */
 export function noteNameEn(midi: number): string {
   const pc = ((midi % 12) + 12) % 12;

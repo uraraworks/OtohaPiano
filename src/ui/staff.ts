@@ -44,7 +44,7 @@ function sharp(x: number, y: number): string {
 /**
  * 音符 1 つぶん(和音なら重ねて)の五線を描いた SVG を返す。
  * @param midis 鳴っている音。和音は同じ五線に重ねる。
- * @param baseMidi 鍵盤の左端。音部記号を決めるのに使う。
+ * @param baseMidi 出題の起点(ド)。音部記号を決めるのに使う。
  */
 export function renderStaff(midis: number[], baseMidi: number): string {
   const clef: Clef = clefFor(baseMidi);

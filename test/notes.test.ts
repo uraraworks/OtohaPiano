@@ -8,6 +8,7 @@ import {
   buildKeyLayout,
   octaveStartCandidates,
   whiteKeyFrom,
+  firstCFrom,
 } from "../src/core/notes.ts";
 
 describe("音名", () => {
@@ -72,5 +73,17 @@ describe("左から n 番目の白鍵", () => {
 
   it("C 起点でも成り立つ(左端が ド でなくても白鍵は数えられる)", () => {
     expect(whiteKeyFrom(60, 2)).toBe(64);
+  });
+});
+
+describe("以上でいちばん近い ド", () => {
+  it("ド でなければ次のドまで進める", () => {
+    expect(firstCFrom(53)).toBe(60); // F3 → C4
+    expect(firstCFrom(41)).toBe(48); // F2 → C3
+    expect(firstCFrom(89)).toBe(96); // F6 → C7
+  });
+
+  it("すでに ド ならそのまま", () => {
+    expect(firstCFrom(60)).toBe(60);
   });
 });

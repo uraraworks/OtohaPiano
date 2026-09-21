@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, makeDrillSteps } from "../src/core/drills.ts";
-import { noteNameJa } from "../src/core/notes.ts";
+import { RANGE_OPTIONS, CHORD_OPTIONS, poolSizeOf, drillWhiteKeys, makeDrillSteps } from "../src/core/drills.ts";
+import { noteNameJa, firstCFrom, whiteKeyFrom } from "../src/core/notes.ts";
 
 const C4 = 60;
 /** 値を順に返す、決まった乱数の代わり。 */
@@ -25,6 +25,32 @@ describe("はんい", () => {
   it("えらんだ数ぶんだけ使う", () => {
     expect(poolSizeOf(RANGE_OPTIONS[0]!, 14)).toBe(3);
     expect(poolSizeOf(RANGE_OPTIONS[1]!, 14)).toBe(5);
+  });
+});
+
+describe("出題に使える白鍵の数(起点はド)", () => {
+  it("左端が ファ(F3) のとき、ド は左から 5 番目の白鍵なので 4 個ぶん飛ばす", () => {
+    expect(drillWhiteKeys(53, 10)).toBe(6);
+    expect(drillWhiteKeys(53, 14)).toBe(10);
+    expect(drillWhiteKeys(53, 21)).toBe(17);
+  });
+
+  it("左端がすでに ド なら飛ばさない", () => {
+    expect(drillWhiteKeys(60, 14)).toBe(14);
+  });
+
+  it("出題に画面外の鍵が出ない", () => {
+    // 左端 F3(53)、白鍵 14 個の鍵盤。出題の起点はドで、使える白鍵は drillWhiteKeys(53, 14) = 10。
+    const base = firstCFrom(53);
+    const pool = drillWhiteKeys(53, 14);
+    const steps = makeDrillSteps({
+      baseMidi: base, poolSize: pool, chordMax: 3, count: 40, rng: Math.random,
+    });
+    // 画面に出ているいちばん右の白鍵(左端から 14 個目 = 13 番目)を超えないこと。
+    const rightEdge = whiteKeyFrom(53, 13);
+    for (const midi of steps.flat()) {
+      expect(midi).toBeLessThanOrEqual(rightEdge);
+    }
   });
 });
 
@@ -99,7 +125,7 @@ describe("出題", () => {
     expect([...CHORD_OPTIONS]).toEqual([1, 2, 3]);
   });
 
-  it("左端が ファ のとき、はんい 3つ なら ファ・ソ・ラ しか出ない", () => {
+  it("起点を ファ にすれば ファ・ソ・ラ が出る(起点を選ぶのは呼び出し側の責任)", () => {
     const steps = makeDrillSteps({
       baseMidi: 53, poolSize: 3, chordMax: 1, count: 30, rng: seq([0.05, 0.4, 0.75, 0.99, 0.2]),
     });

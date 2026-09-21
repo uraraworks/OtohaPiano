@@ -10,10 +10,10 @@
 // 範囲も長さも出題の中身も引数で変えられる。
 //
 // 難しさは 2 つの軸に分けてある。混ぜると「何が難しくなったのか」が分からなくなる。
-//   はんい   … 画面に出ている鍵盤の、左から何個ぶんを使うか
+//   はんい   … 出題の起点(ド)から何個ぶんを使うか
 //   いちどに … 同時に鳴らす音を何個までにするか
 
-import { whiteKeyFrom } from "./notes.ts";
+import { whiteIndexOf, whiteKeyFrom, firstCFrom } from "./notes.ts";
 
 export interface RangeOption {
   id: string;
@@ -26,9 +26,9 @@ export interface RangeOption {
 }
 
 export const RANGE_OPTIONS: RangeOption[] = [
-  { id: "r3", label: "3つ", aim: "<ruby>左<rt>ひだり</rt></ruby>から <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> 3つ", count: 3 },
-  { id: "r5", label: "5つ", aim: "<ruby>左<rt>ひだり</rt></ruby>から <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> 5つ", count: 5 },
-  { id: "rall", label: "<ruby>全部<rt>ぜんぶ</rt></ruby>", aim: "<ruby>見<rt>み</rt></ruby>えている <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> <ruby>全部<rt>ぜんぶ</rt></ruby>", count: "all" },
+  { id: "r3", label: "3つ", aim: "ド から <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> 3つ", count: 3 },
+  { id: "r5", label: "5つ", aim: "ド から <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> 5つ", count: 5 },
+  { id: "rall", label: "<ruby>全部<rt>ぜんぶ</rt></ruby>", aim: "ド から <ruby>見<rt>み</rt></ruby>えている <ruby>白<rt>しろ</rt></ruby>い<ruby>鍵<rt>けん</rt></ruby> <ruby>全部<rt>ぜんぶ</rt></ruby>", count: "all" },
 ];
 
 /** 同時に鳴らす音の上限として選べる数。 */
@@ -36,12 +36,22 @@ export const CHORD_OPTIONS = [1, 2, 3] as const;
 
 /**
  * 実際に使う白鍵の数を出す。
- * 「ぜんぶ」は画面に出ている鍵盤に従うので、鍵盤の広さを変えると出題も変わる。
- * 画面に無い鍵が答えになることは無い。
+ * 「ぜんぶ」は、出題の起点(ド)から画面の右端までの白鍵数(drillWhiteKeys の戻り値)に従うので、
+ * 鍵盤の広さを変えると出題も変わる。画面に無い鍵が答えになることは無い。
  */
 export function poolSizeOf(range: RangeOption, visibleWhiteKeys: number): number {
   const n = range.count === "all" ? visibleWhiteKeys : range.count;
   return Math.max(1, Math.min(n, visibleWhiteKeys));
+}
+
+/**
+ * 出題に使える白鍵の数。
+ * 鍵盤の左端(ファ)ではなく、出題の起点(ド)から画面の右端までを数える。
+ * こうしないと「ぜんぶ」を選んだときに、画面に無い鍵が答えになってしまう。
+ */
+export function drillWhiteKeys(startMidi: number, whiteCount: number): number {
+  const skipped = whiteIndexOf(firstCFrom(startMidi)) - whiteIndexOf(startMidi);
+  return Math.max(1, whiteCount - skipped);
 }
 
 export interface DrillOptions {
@@ -62,10 +72,11 @@ export interface DrillOptions {
 
 /**
  * 出題を作る。1 手 = 同時に押す MIDI 番号の並び。
- * 出題はすべて、画面に出ている鍵盤の白鍵から選ばれる。
- * 音の高さは「左端から数えた白鍵」で決める(長調の音階ではない)。
- * 左端がファだと C メジャーの半音差表には黒鍵(シ♭)が混ざってしまい、
- * 「左から白い鍵 n つ」という出題の建前が崩れるため。
+ * 出題はすべて baseMidi から数えた白鍵の中から選ばれる。
+ * 音の高さは「baseMidi から数えた白鍵」で決める(長調の音階ではない)。
+ * この関数自体は baseMidi が何の音かを問わない純粋関数。
+ * おとあての出題では、呼び出し側が baseMidi に「出題の起点(ド)」を渡すことで
+ * 「ド から白い鍵 n つ」という説明どおりの出題になる(黒鍵が混ざらない)。
  */
 export function makeDrillSteps(opts: DrillOptions): number[][] {
   const { baseMidi, poolSize, chordMax, count, rng } = opts;

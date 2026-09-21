@@ -2,11 +2,10 @@ import { describe, it, expect } from "vitest";
 import { clefFor, staffStep, ledgerSteps, needsSharp, TOP_LINE_STEP } from "../src/core/staff.ts";
 
 describe("音部記号のえらび方", () => {
-  it("鍵盤の左端が F3 以上ならト音記号、それより下ならヘ音記号", () => {
+  it("出題の起点(ド)が中央のド以上ならト音記号、それより下ならヘ音記号", () => {
     expect(clefFor(60)).toBe("treble");
     expect(clefFor(72)).toBe("treble");
     expect(clefFor(48)).toBe("bass");
-    expect(clefFor(53)).toBe("treble");
   });
 });
 
