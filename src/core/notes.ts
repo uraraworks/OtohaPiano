@@ -91,7 +91,7 @@ export function buildKeyLayout(startMidi: number, whiteCount: number): KeyLayout
  * 鍵盤の左端に置ける最も低い ファ。
  * オクターブ移動ボタンはこの一覧の上を動くだけにして、
  * 「ファで始まらない鍵盤」が出ないようにする。
- * アンパンマンピアノ等、子供向けピアノはファ始まりが多いので、それに合わせてある。
+ * 子供向けピアノはファ始まりが多いので、それに合わせてある。
  */
 export function octaveStartCandidates(whiteCount: number): number[] {
   const out: number[] = [];
