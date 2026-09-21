@@ -7,7 +7,7 @@
 import { buildKeyLayout, noteNameJa, type KeyLayoutItem } from "../core/notes.ts";
 
 export interface KeyboardOptions {
-  /** 左端の MIDI 番号(必ず C)。 */
+  /** 左端の MIDI 番号(必ず ファ)。 */
   startMidi: number;
   /** 白鍵の数。 */
   whiteCount: number;

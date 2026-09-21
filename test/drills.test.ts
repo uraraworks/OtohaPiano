@@ -98,4 +98,13 @@ describe("出題", () => {
   it("えらべる同時発音数は 1〜3", () => {
     expect([...CHORD_OPTIONS]).toEqual([1, 2, 3]);
   });
+
+  it("左端が ファ のとき、はんい 3つ なら ファ・ソ・ラ しか出ない", () => {
+    const steps = makeDrillSteps({
+      baseMidi: 53, poolSize: 3, chordMax: 1, count: 30, rng: seq([0.05, 0.4, 0.75, 0.99, 0.2]),
+    });
+    for (const midi of steps.flat()) {
+      expect(["ファ", "ソ", "ラ"]).toContain(noteNameJa(midi));
+    }
+  });
 });

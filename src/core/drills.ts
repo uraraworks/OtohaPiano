@@ -13,15 +13,7 @@
 //   はんい   … 画面に出ている鍵盤の、左から何個ぶんを使うか
 //   いちどに … 同時に鳴らす音を何個までにするか
 
-/** 長調の音階を半音差で表したもの。ド=0 から 1 オクターブ上のド=12 まで。 */
-const MAJOR = [0, 2, 4, 5, 7, 9, 11, 12] as const;
-
-/** 白鍵の n 番目(0 起点)を半音差に直す。7 以上は 1 オクターブ上へ回す。 */
-function deg(n: number): number {
-  const octave = Math.floor(n / 7);
-  const within = ((n % 7) + 7) % 7;
-  return MAJOR[within]! + octave * 12;
-}
+import { whiteKeyFrom } from "./notes.ts";
 
 export interface RangeOption {
   id: string;
@@ -53,7 +45,7 @@ export function poolSizeOf(range: RangeOption, visibleWhiteKeys: number): number
 }
 
 export interface DrillOptions {
-  /** 鍵盤の左端(ド)の MIDI 番号。 */
+  /** 鍵盤の左端の MIDI 番号。 */
   baseMidi: number;
   /** 使う白鍵の数。 */
   poolSize: number;
@@ -71,6 +63,9 @@ export interface DrillOptions {
 /**
  * 出題を作る。1 手 = 同時に押す MIDI 番号の並び。
  * 出題はすべて、画面に出ている鍵盤の白鍵から選ばれる。
+ * 音の高さは「左端から数えた白鍵」で決める(長調の音階ではない)。
+ * 左端がファだと C メジャーの半音差表には黒鍵(シ♭)が混ざってしまい、
+ * 「左から白い鍵 n つ」という出題の建前が崩れるため。
  */
 export function makeDrillSteps(opts: DrillOptions): number[][] {
   const { baseMidi, poolSize, chordMax, count, rng } = opts;
@@ -86,7 +81,7 @@ export function makeDrillSteps(opts: DrillOptions): number[][] {
     // 1 回だけ引き直す(引き直しても同じなら諦める。無限に粘らない)。
     if (degrees.join(",") === prev) degrees = pickDistinct(pool, size, rng);
     prev = degrees.join(",");
-    steps.push(degrees.map((n) => baseMidi + deg(n)));
+    steps.push(degrees.map((n) => whiteKeyFrom(baseMidi, n)));
   }
   return steps;
 }

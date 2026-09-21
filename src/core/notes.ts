@@ -25,6 +25,9 @@ export const MIDI_MAX = 108; // C8
 /** 中央のド。オクターブ移動の基準点。 */
 export const MIDI_MIDDLE_C = 60;
 
+/** 鍵盤の左端の初期位置。F3。ここから白鍵 14 個で、中央のドが真ん中あたりに来る。 */
+export const MIDI_DEFAULT_START = 53;
+
 export function isBlackKey(midi: number): boolean {
   return IS_BLACK[((midi % 12) + 12) % 12]!;
 }
@@ -85,20 +88,33 @@ export function buildKeyLayout(startMidi: number, whiteCount: number): KeyLayout
 }
 
 /**
- * 鍵盤の左端に置ける最も低い C。
+ * 鍵盤の左端に置ける最も低い ファ。
  * オクターブ移動ボタンはこの一覧の上を動くだけにして、
- * 「ドで始まらない鍵盤」が出ないようにする。
+ * 「ファで始まらない鍵盤」が出ないようにする。
+ * アンパンマンピアノ等、子供向けピアノはファ始まりが多いので、それに合わせてある。
  */
 export function octaveStartCandidates(whiteCount: number): number[] {
   const out: number[] = [];
-  for (let c = 24; c <= 96; c += 12) {
-    // その C から白鍵 whiteCount 個ぶんが MIDI_MAX に収まるか
-    const lastWhite = whiteIndexOf(c) + whiteCount - 1;
+  for (let f = 29; f <= 89; f += 12) {
+    // その ファ から白鍵 whiteCount 個ぶんが MIDI_MAX に収まるか
+    const lastWhite = whiteIndexOf(f) + whiteCount - 1;
     let fits = false;
-    for (let m = c; m <= MIDI_MAX; m++) {
+    for (let m = f; m <= MIDI_MAX; m++) {
       if (!isBlackKey(m) && whiteIndexOf(m) === lastWhite) { fits = true; break; }
     }
-    if (fits) out.push(c);
+    if (fits) out.push(f);
   }
   return out;
+}
+
+/**
+ * startMidi(白鍵)から数えて n 番目(0 起点)の白鍵の MIDI 番号。
+ * 左端が ド でなくても「左から n 番目の白鍵」が求まる。
+ */
+export function whiteKeyFrom(startMidi: number, n: number): number {
+  let midi = startMidi;
+  for (let left = n; left > 0; left--) {
+    do { midi++; } while (isBlackKey(midi));
+  }
+  return midi;
 }

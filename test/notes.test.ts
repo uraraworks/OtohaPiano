@@ -7,6 +7,7 @@ import {
   whiteIndexOf,
   buildKeyLayout,
   octaveStartCandidates,
+  whiteKeyFrom,
 } from "../src/core/notes.ts";
 
 describe("音名", () => {
@@ -53,9 +54,23 @@ describe("鍵盤の並び", () => {
     expect(layout.slice(firstBlack).every((k) => k.black)).toBe(true);
   });
 
-  it("左端の候補はすべて C", () => {
+  it("左端の候補はすべて ファ", () => {
     for (const midi of octaveStartCandidates(14)) {
-      expect(noteNameJa(midi)).toBe("ド");
+      expect(noteNameJa(midi)).toBe("ファ");
     }
+  });
+});
+
+describe("左から n 番目の白鍵", () => {
+  it("F3 起点で数える", () => {
+    expect(whiteKeyFrom(53, 0)).toBe(53); // ファ
+    expect(whiteKeyFrom(53, 1)).toBe(55); // ソ
+    expect(whiteKeyFrom(53, 3)).toBe(59); // シ
+    expect(whiteKeyFrom(53, 4)).toBe(60); // ド
+    expect(whiteKeyFrom(53, 7)).toBe(65); // ファ(1 オクターブ上)
+  });
+
+  it("C 起点でも成り立つ(左端が ド でなくても白鍵は数えられる)", () => {
+    expect(whiteKeyFrom(60, 2)).toBe(64);
   });
 });

@@ -4,7 +4,7 @@
 import "./style.css";
 import { Synth, INSTRUMENTS } from "./core/synth.ts";
 import { Keyboard } from "./ui/keyboard.ts";
-import { MIDI_MIDDLE_C, noteNameEn, noteNameJa, octaveStartCandidates } from "./core/notes.ts";
+import { MIDI_DEFAULT_START, noteNameEn, noteNameJa, octaveStartCandidates } from "./core/notes.ts";
 import { VideoPlayer } from "./core/youtubePlayer.ts";
 import { parseVideoId, parseStartSeconds, thumbnailUrl, formatTime } from "./core/youtubeUrl.ts";
 import {
@@ -73,7 +73,7 @@ let takes: Take[] = loadTakes();
 let memos: MemoMeta[] = loadMemos();
 let currentVideo: VideoEntry | null = null;
 let whiteCount = 14;
-let startMidi = MIDI_MIDDLE_C;
+let startMidi = MIDI_DEFAULT_START;
 /** 打鍵記録の録音中フラグ。時刻の基準が動画かどうかもここで持つ。 */
 let recordingKeys = false;
 let recordingVideoId: string | null = null;
@@ -257,7 +257,7 @@ for (const btn of document.querySelectorAll<HTMLElement>(".width-btn")) {
     btn.classList.add("is-on");
     // 幅を変えると左端の候補も変わるので、収まる位置へ寄せ直す。
     const candidates = octaveStartCandidates(whiteCount);
-    if (!candidates.includes(startMidi)) startMidi = candidates[candidates.length - 1] ?? MIDI_MIDDLE_C;
+    if (!candidates.includes(startMidi)) startMidi = candidates[candidates.length - 1] ?? MIDI_DEFAULT_START;
     keyboard.setRange(startMidi, whiteCount);
     updateOctaveLabel();
   });
@@ -979,7 +979,7 @@ const MODE_HINTS: Record<PromptMode, string> = {
 const DRILL_CHUNK = 12;
 
 /**
- * 出題は鍵盤の左端を「ド」として作る。
+ * 出題は鍵盤の左端を起点に、白鍵を左から数えて作る。
  * オクターブを動かしても、答えの鍵が画面の外へ出ないようにするため。
  */
 function drillBase(): number {
