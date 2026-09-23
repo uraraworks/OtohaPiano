@@ -1488,6 +1488,73 @@ ruby rt {
   }
 }
 
+/* ---- 縦持ちのスマートフォン ---------------------------------------------- */
+
+/* 縦が足りない端末では、おとあての枠(おだい・成績・終わる)と鍵盤を足すと
+   画面に入らず、おだいの上か下が必ず見切れていた(「第◯問」が隠れた)。
+   おだいそのものは削らず、飾り・余白・使っていない行から先に削る。
+   max-height で縛るのは、タブレットの縦持ち(1000px 超)には要らない調整だから。 */
+@media (orientation: portrait) and (max-height: 820px) {
+  /* 鍵盤は少し低くする。白鍵が 150px 前後あれば指は届くので、
+     削ったぶんを上の段に渡したほうが全体としては弾きやすい。 */
+  .keyboard {
+    height: clamp(104px, 22vh, 220px);
+  }
+
+  .practice-now {
+    padding: 8px;
+    gap: 4px;
+  }
+
+  /* 「第◯問」の丸枠。丸みは残したまま、ふりがなのぶんだけの高さに詰める。 */
+  .practice-head {
+    padding: 0;
+  }
+
+  .question-no {
+    padding: 7px 16px 5px;
+    font-size: clamp(1rem, 2.6vh, 1.3rem);
+  }
+
+  /* おだいの枠は縦の余りを受け取る側なので、下限だけ下げておく
+     (余っていれば、これより大きく広がる)。 */
+  .question-body {
+    min-height: 100px;
+  }
+
+  .staff-svg {
+    height: clamp(96px, 17vh, 240px);
+  }
+
+  .prompt-note {
+    height: min(100%, clamp(92px, 20vh, 220px));
+  }
+
+  /* 印も入れ物に合わせて小さくする。はみ出すと上下が切られて形が読めない。 */
+  .judge {
+    font-size: clamp(2.6rem, 12vh, 9rem);
+  }
+
+  .judge.is-ok {
+    font-size: clamp(3.2rem, 17vh, 13rem);
+  }
+
+  .judge small {
+    font-size: clamp(0.8rem, 2.2vh, 1.2rem);
+  }
+
+  /* 最高記録の行は、記録が無いうちも空のまま 28px を確保していた。
+     縦が足りない画面では、その空きがそのまま見切れにつながる。 */
+  .practice-foot-sub {
+    min-height: 0;
+  }
+
+  .btn-quit {
+    min-height: 40px;
+    padding: 0 20px;
+  }
+}
+
 /* ---- 印刷(ドレミの持ち出し) --------------------------------------------- */
 
 @media print {
